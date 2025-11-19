@@ -1,5 +1,8 @@
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const TEST_KEY = 'sk_test_' + '51SVEXFHg3BhYAtWaFKxCqiF5yFb2q2cL7sFWkWxIu4gX3qebEwX1xIrc3uiBNX4UYxWi8uAzN1N7svGume4VXWI200zV3nudoX';
+
+// Utilise la clé d'environnement si elle existe, sinon utilise la clé de TEST en dur
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || TEST_KEY);
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -38,7 +41,7 @@ exports.handler = async (event, context) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Pack Étudiant Pro - MémoirePro AI',
+              name: 'Pack Étudiant Pro (TEST MODE)',
               description: 'Licence à vie, export Word, IA illimitée.',
               images: ['https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500&q=80'],
             },

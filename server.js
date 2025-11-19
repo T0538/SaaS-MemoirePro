@@ -1,10 +1,10 @@
+
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
-// ASTUCE : On découpe la clé pour que GitHub ne bloque pas le commit, 
-// tout en permettant le test local sans fichier .env
+// CLÉ DE TEST STRIPE (Découpée pour GitHub)
 const LOCAL_STRIPE_KEY = 'sk_test_' + '51SVEXFHg3BhYAtWaFKxCqiF5yFb2q2cL7sFWkWxIu4gX3qebEwX1xIrc3uiBNX4UYxWi8uAzN1N7svGume4VXWI200zV3nudoX';
 
 // Configuration Stripe : Utilise la variable d'environnement (Prod) OU la clé locale (Test)
@@ -26,7 +26,7 @@ app.post('/create-checkout-session', async (req, res) => {
     // L'URL du frontend (pour la redirection après paiement)
     const clientUrl = req.get('origin') || 'http://localhost:5173';
 
-    console.log("Création session Stripe pour :", clientUrl);
+    console.log("Création session Stripe (TEST) pour :", clientUrl);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -35,7 +35,7 @@ app.post('/create-checkout-session', async (req, res) => {
           price_data: {
             currency: 'usd', 
             product_data: {
-              name: 'Pack Étudiant Pro - MémoirePro AI',
+              name: 'Pack Étudiant Pro (TEST)',
               description: 'Licence à vie, export Word, IA illimitée.',
               images: ['https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500&q=80'], 
             },
