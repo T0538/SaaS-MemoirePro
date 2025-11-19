@@ -1,7 +1,6 @@
 import React from 'react';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Confetti from 'react-dom-confetti'; // On simule juste l'effet visuel, pas besoin de la lib pour l'exemple
 
 export const SuccessPage: React.FC = () => {
   return (
