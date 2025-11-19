@@ -1,6 +1,7 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { BLOG_POSTS } from '../data/content';
-import { Search, Clock, ArrowRight } from 'lucide-react';
+import { Search, Clock, ArrowRight, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const ResourcesPage: React.FC = () => {
@@ -42,46 +43,14 @@ export const ResourcesPage: React.FC = () => {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {BLOG_POSTS.map((post) => (
-            <article key={post.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border border-slate-100 flex flex-col">
-              <div className="h-48 overflow-hidden relative">
-                <img 
-                  src={post.imageUrl} 
-                  alt={post.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-indigo-600 uppercase tracking-wide">
-                  {post.category}
-                </div>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <Link to={`/blog/${post.slug}`}>
-                    <h3 className="text-xl font-serif font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors cursor-pointer">
-                    {post.title}
-                    </h3>
-                </Link>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-1">
-                  {post.excerpt}
-                </p>
-                
-                <div className="flex items-center justify-between pt-6 border-t border-slate-50 mt-auto">
-                  <div className="flex items-center gap-2 text-slate-400 text-xs">
-                    <Clock size={14} />
-                    <span>{post.readTime} de lecture</span>
-                  </div>
-                  <Link to={`/blog/${post.slug}`} className="text-slate-900 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Lire l'article <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </div>
-            </article>
+            <BlogCard key={post.id} post={post} />
           ))}
         </div>
       </div>
 
       {/* Newsletter */}
       <div className="max-w-4xl mx-auto px-6 mt-12">
-        <div className="bg-indigo-600 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden">
+        <div className="bg-indigo-600 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden shadow-xl shadow-indigo-200">
           <div className="relative z-10">
             <h2 className="text-2xl font-serif font-bold mb-4">Ne manquez aucun conseil</h2>
             <p className="text-indigo-100 mb-8 max-w-lg mx-auto">Rejoignez 5000+ étudiants qui reçoivent nos astuces hebdomadaires pour réussir leur mémoire.</p>
@@ -89,9 +58,9 @@ export const ResourcesPage: React.FC = () => {
               <input 
                 type="email" 
                 placeholder="votre@email.com" 
-                className="px-6 py-3 rounded-full text-slate-900 outline-none flex-1"
+                className="px-6 py-3 rounded-full text-slate-900 outline-none flex-1 border-2 border-transparent focus:border-indigo-300"
               />
-              <button className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full transition">
+              <button className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full transition shadow-lg">
                 S'inscrire
               </button>
             </div>
@@ -100,5 +69,54 @@ export const ResourcesPage: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Subcomponent for safe image loading
+const BlogCard: React.FC<{ post: any }> = ({ post }) => {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <article className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border border-slate-100 flex flex-col h-full">
+      <div className="h-52 overflow-hidden relative bg-slate-200">
+        {!imgError ? (
+            <img 
+            src={post.imageUrl} 
+            alt={post.title} 
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+            />
+        ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-indigo-50 text-slate-300">
+                <ImageOff size={32} className="mb-2" />
+                <span className="text-xs font-medium">Image indisponible</span>
+            </div>
+        )}
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-indigo-600 uppercase tracking-wide shadow-sm">
+            {post.category}
+        </div>
+      </div>
+      
+      <div className="p-6 flex-1 flex flex-col">
+        <Link to={`/blog/${post.slug}`}>
+            <h3 className="text-xl font-serif font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors cursor-pointer line-clamp-2">
+            {post.title}
+            </h3>
+        </Link>
+        <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-1 line-clamp-3">
+            {post.excerpt}
+        </p>
+        
+        <div className="flex items-center justify-between pt-6 border-t border-slate-50 mt-auto">
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <Clock size={14} />
+            <span>{post.readTime} de lecture</span>
+            </div>
+            <Link to={`/blog/${post.slug}`} className="text-slate-900 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Lire l'article <ArrowRight size={14} className="text-indigo-600" />
+            </Link>
+        </div>
+      </div>
+    </article>
   );
 };

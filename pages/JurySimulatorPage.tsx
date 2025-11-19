@@ -104,30 +104,30 @@ export const JurySimulatorPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="h-[100dvh] bg-slate-50 flex flex-col overflow-hidden">
       
       {/* Header Simple */}
-      <header className="bg-white border-b border-slate-200 py-4 px-6 flex items-center justify-between sticky top-0 z-10">
-        <Link to="/app" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium">
-          <ArrowLeft size={20} />
-          Retour à l'éditeur
+      <header className="bg-white border-b border-slate-200 py-3 px-4 flex items-center justify-between shrink-0">
+        <Link to="/app" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium text-sm">
+          <ArrowLeft size={18} />
+          <span className="hidden md:inline">Retour à l'éditeur</span>
         </Link>
         <div className="flex items-center gap-2 font-bold text-slate-900">
-          <div className="bg-amber-100 text-amber-600 p-2 rounded-lg">
-             <Award size={20} />
+          <div className="bg-amber-100 text-amber-600 p-1.5 rounded-lg">
+             <Award size={18} />
           </div>
-          <span>Grand Oral Simulator</span>
+          <span className="text-sm md:text-base">Grand Oral Simulator</span>
         </div>
-        <div className="w-24"></div> {/* Spacer */}
+        <div className="w-10 md:w-24"></div> {/* Spacer */}
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6 flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col">
         
         {step === 'setup' ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-10 max-w-2xl w-full animate-fade-in">
-              <h1 className="text-3xl font-serif font-bold text-slate-900 mb-2 text-center">Configurez votre Jury</h1>
-              <p className="text-slate-500 text-center mb-8">Choisissez qui va vous interroger aujourd'hui.</p>
+          <div className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-10 max-w-2xl w-full animate-fade-in">
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 mb-2 text-center">Configurez votre Jury</h1>
+              <p className="text-slate-500 text-center mb-8 text-sm md:text-base">Choisissez qui va vous interroger aujourd'hui.</p>
 
               <div className="space-y-6">
                 <div>
@@ -150,19 +150,19 @@ export const JurySimulatorPage: React.FC = () => {
                         onClick={() => setSelectedPersona(persona)}
                         className={`p-4 rounded-xl border-2 text-left transition-all group relative overflow-hidden ${selectedPersona.id === persona.id ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-100 hover:border-slate-300'}`}
                       >
-                        <div className="mb-3 relative">
+                        <div className="mb-3 relative flex md:block justify-center">
                           <img 
                             src={persona.avatar} 
                             alt={persona.name} 
                             className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
                           />
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm shadow-sm border border-slate-100">
+                          <div className="absolute -bottom-1 -right-1 md:right-auto md:left-10 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm shadow-sm border border-slate-100">
                             {persona.tone === 'Strict' ? '🎓' : persona.tone === 'Technique' ? '💼' : '🤔'}
                           </div>
                         </div>
-                        <div className="font-bold text-slate-900 text-sm group-hover:text-amber-700 transition-colors">{persona.name}</div>
-                        <div className="text-xs text-slate-500 mb-2 font-medium">{persona.role}</div>
-                        <p className="text-[10px] text-slate-400 leading-tight line-clamp-3">{persona.description}</p>
+                        <div className="font-bold text-slate-900 text-sm group-hover:text-amber-700 transition-colors text-center md:text-left">{persona.name}</div>
+                        <div className="text-xs text-slate-500 mb-2 font-medium text-center md:text-left">{persona.role}</div>
+                        <p className="text-[10px] text-slate-400 leading-tight line-clamp-3 text-center md:text-left hidden md:block">{persona.description}</p>
                       </button>
                     ))}
                   </div>
@@ -179,12 +179,19 @@ export const JurySimulatorPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col md:flex-row gap-0 md:gap-6 p-0 md:p-6 h-full overflow-hidden">
             
             {/* Chat Area */}
-            <div className="flex-1 bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden min-h-[500px]">
-              {/* Top Bar Persona */}
-              <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-4">
+            <div className="flex-1 bg-white md:rounded-2xl shadow-none md:shadow-lg border-t md:border border-slate-200 flex flex-col overflow-hidden h-full">
+              
+              {/* Mobile Compact Header Score */}
+              <div className="md:hidden bg-slate-900 text-white px-4 py-2 flex items-center justify-between text-xs font-medium">
+                 <span>Jury: {selectedPersona.name}</span>
+                 <span className={`${currentScore < 50 ? 'text-red-400' : 'text-emerald-400'}`}>Score: {currentScore}%</span>
+              </div>
+
+              {/* Top Bar Persona (Desktop) */}
+              <div className="hidden md:flex p-4 border-b border-slate-100 bg-slate-50 items-center gap-4">
                 <img 
                   src={selectedPersona.avatar} 
                   alt={selectedPersona.name} 
@@ -197,10 +204,10 @@ export const JurySimulatorPage: React.FC = () => {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FDFDFD]">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-[#FDFDFD]">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex gap-3 ${
+                    <div className={`max-w-[90%] md:max-w-[85%] p-3 md:p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex gap-3 ${
                       msg.sender === 'user' 
                         ? 'bg-slate-900 text-white rounded-br-none' 
                         : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none'
@@ -217,7 +224,7 @@ export const JurySimulatorPage: React.FC = () => {
                         {msg.critique && (
                           <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 italic flex items-start gap-2">
                              <MessageSquare size={12} className="mt-0.5" />
-                             Feedback interne: "{msg.critique}"
+                             Feedback: "{msg.critique}"
                           </div>
                         )}
                       </div>
@@ -238,10 +245,10 @@ export const JurySimulatorPage: React.FC = () => {
               </div>
 
               {/* Input Area */}
-              <div className="p-4 bg-white border-t border-slate-100 flex gap-3">
+              <div className="p-3 md:p-4 bg-white border-t border-slate-100 flex gap-3 shrink-0">
                 <input 
                   type="text"
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm md:text-base"
                   placeholder="Votre réponse..."
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value)}
@@ -252,15 +259,15 @@ export const JurySimulatorPage: React.FC = () => {
                 <button 
                   onClick={handleSendMessage}
                   disabled={isLoading || !currentInput.trim()}
-                  className="p-3 bg-slate-900 text-white rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50"
+                  className="p-3 bg-slate-900 text-white rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50 shrink-0"
                 >
                   <Send size={20} />
                 </button>
               </div>
             </div>
 
-            {/* Sidebar Stats */}
-            <div className="w-full md:w-72 flex flex-col gap-4">
+            {/* Sidebar Stats (Desktop Only) */}
+            <div className="hidden md:flex w-72 flex-col gap-4">
                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <BarChart3 size={14} />

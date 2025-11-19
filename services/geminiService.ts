@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Domain, Chapter, Section, JuryQuestion, JuryPersona, JuryMessage } from '../types';
+import { Domain, Chapter, Section, JuryQuestion, JuryPersona, JuryMessage, Reference } from '../types';
 
 // Helper to create ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -308,3 +308,40 @@ export const interactWithJury = async (
       };
     }
 };
+
+// FEATURE: BIBLIOGRAPHE IA (Suggestions)
+export const suggestReferences = async (topic: string, domain: string): Promise<Reference[]> => {
+  try {
+    const prompt = `
+      Agis comme un documentaliste expert en ${domain}. Sujet : "${topic}".
+      Suggère 4 références bibliographiques académiques (Livres ou Articles majeurs) très pertinentes pour ce sujet.
+      Elles doivent être réelles ou très vraisemblables.
+      
+      Pour chaque référence, génère la citation exacte au format APA 7 (American Psychological Association).
+
+      Réponds UNIQUEMENT en JSON :
+      [
+        { "title": "...", "author": "...", "year": "202X", "type": "book", "citation": "Auteur, A. (Année). Titre..." }
+      ]
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+
+    const data = JSON.parse(response.text || "[]");
+    return data.map((ref: any) => ({
+      id: generateId(),
+      type: ref.type || 'book',
+      title: ref.title,
+      author: ref.author,
+      year: ref.year,
+      citation: ref.citation
+    }));
+  } catch (e) {
+    console.error("Biblio Error", e);
+    return [];
+  }
+}

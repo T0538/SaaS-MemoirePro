@@ -34,7 +34,7 @@ export const PricingPage: React.FC = () => {
                 <Check size={18} className="text-slate-400" /> Analyse du sujet
               </li>
               <li className="flex items-center gap-3 text-slate-600 text-sm">
-                <Check size={18} className="text-slate-400" /> Accès au Blog
+                <Check size={18} className="text-slate-400" /> 3 sections de rédaction (Essai)
               </li>
             </ul>
             <Link to="/app" className="w-full py-3 px-6 rounded-xl border border-slate-200 text-slate-700 font-semibold text-center hover:bg-slate-50 transition">
@@ -63,10 +63,16 @@ export const PricingPage: React.FC = () => {
                 <Check size={18} className="text-emerald-400" /> Humanisation du texte
               </li>
               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Export Word & Markdown
+                <Check size={18} className="text-emerald-400" /> Développeur Intelligent (Notes → Texte)
+              </li>
+               <li className="flex items-center gap-3 text-slate-300 text-sm">
+                <Check size={18} className="text-emerald-400" /> Générateur de Bibliographie (APA)
               </li>
               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Expertise Technique
+                <Check size={18} className="text-emerald-400" /> Coach Grand Oral (Simulateur)
+              </li>
+               <li className="flex items-center gap-3 text-slate-300 text-sm">
+                <Check size={18} className="text-emerald-400" /> Export Word (.doc)
               </li>
             </ul>
             <Link to="/checkout" className="w-full py-3 px-6 rounded-xl bg-indigo-600 text-white font-bold text-center hover:bg-indigo-700 transition shadow-lg shadow-indigo-900/50">

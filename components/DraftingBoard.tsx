@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ThesisProject, Section, JuryQuestion } from '../types';
-import { generateSectionContent, improveText, expandContent, generateJuryQuestions } from '../services/geminiService';
+import { ThesisProject, Section, JuryQuestion, Reference } from '../types';
+import { generateSectionContent, improveText, expandContent, generateJuryQuestions, suggestReferences } from '../services/geminiService';
 import { 
   Bot, 
   AlertCircle, 
@@ -18,7 +18,10 @@ import {
   Maximize2,
   Users,
   X,
-  HelpCircle
+  HelpCircle,
+  Book,
+  Copy,
+  Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -43,6 +46,12 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [improveInstruction, setImproveInstruction] = useState('');
   const [showImproveInput, setShowImproveInput] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // BIBLIOGRAPHY STATE
+  const [showBiblioPanel, setShowBiblioPanel] = useState(false);
+  const [references, setReferences] = useState<Reference[]>([]);
+  const [suggestedRefs, setSuggestedRefs] = useState<Reference[]>([]);
+  const [isBiblioLoading, setIsBiblioLoading] = useState(false);
 
   // LICENCE STATE
   const [isPremium, setIsPremium] = useState(false);
@@ -167,6 +176,30 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       }
   };
 
+  // FEATURE: BIBLIOGRAPHY
+  const handleSuggestBiblio = async () => {
+      setIsBiblioLoading(true);
+      try {
+          const context = activeChapter ? `${project.title} - ${activeChapter.title}` : project.title;
+          const suggestions = await suggestReferences(context, project.domain);
+          setSuggestedRefs(suggestions);
+      } catch(e) {
+          alert("Impossible de trouver des suggestions.");
+      } finally {
+          setIsBiblioLoading(false);
+      }
+  };
+
+  const handleAddRef = (ref: Reference) => {
+      setReferences([...references, ref]);
+      setSuggestedRefs(suggestedRefs.filter(r => r.id !== ref.id));
+  };
+
+  const handleCopyCitation = (citation: string) => {
+      navigator.clipboard.writeText(citation);
+      alert("Citation copiée !");
+  };
+
   const handleSaveContent = (content: string, status: Section['status']) => {
     if (!activeChapterId || !activeSectionId) return;
     
@@ -209,6 +242,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         });
     });
 
+    // Append Bibliography
+    if (references.length > 0) {
+        htmlContent += `<h2 style="page-break-before: always; color: #2e3546; font-size: 18pt; margin-top: 20px;">Bibliographie</h2>`;
+        references.forEach(ref => {
+            htmlContent += `<p style="margin-bottom: 10px;">${ref.citation}</p>`;
+        });
+    }
+
     const html = preHtml + htmlContent + postHtml;
     const blob = new Blob(['\ufeff', html], {
         type: 'application/msword'
@@ -249,6 +290,8 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
             h2 { border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; margin-top: 3rem; color: #1f2937; page-break-before: always; }
             h3 { color: #4f46e5; margin-top: 2rem; font-size: 1.2rem; }
             p { margin-bottom: 1rem; text-align: justify; }
+            .biblio { margin-top: 3rem; border-top: 4px solid #e5e7eb; padding-top: 2rem; }
+            .ref { margin-bottom: 1rem; padding-left: 1rem; border-left: 3px solid #cbd5e1; }
             @media print {
               body { padding: 0; max-width: 100%; }
               button { display: none; }
@@ -269,6 +312,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       });
     });
 
+    if (references.length > 0) {
+        content += `<div class="biblio"><h2>Bibliographie</h2>`;
+        references.forEach(ref => {
+            content += `<div class="ref">${ref.citation}</div>`;
+        });
+        content += `</div>`;
+    }
+
     content += `
           <script>
             window.onload = () => { setTimeout(() => { window.print(); }, 500); };
@@ -288,13 +339,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-10 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-20 absolute md:relative shadow-xl md:shadow-none`}>
+      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-50 absolute md:relative shadow-xl md:shadow-none`}>
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
             <div className="flex items-center gap-2 font-bold">
                 <FileText size={16} className="text-indigo-400"/>
@@ -321,37 +372,62 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         )}
 
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
-          {project.chapters.map((chapter, idx) => (
-            <div key={chapter.id} className="animate-fade-in" style={{animationDelay: `${idx * 0.05}s`}}>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pl-3 truncate" title={chapter.title}>
-                {idx + 1}. {chapter.title}
-              </h4>
-              <ul className="space-y-0.5">
-                {chapter.sections.map((section) => {
-                  const isActive = section.id === activeSectionId;
-                  return (
-                    <li key={section.id}>
-                      <button
-                        onClick={() => {
-                          setActiveChapterId(chapter.id);
-                          setActiveSectionId(section.id);
-                          if(window.innerWidth < 768) setSidebarOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-start gap-2 transition-all ${
-                          isActive 
-                            ? 'bg-indigo-50 text-indigo-900 font-semibold shadow-sm' 
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                        }`}
-                      >
-                        <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${section.status === 'completed' ? 'bg-green-500' : isActive ? 'bg-indigo-500' : 'bg-slate-300'}`} />
-                        <span className="leading-tight">{section.title}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+          
+          {/* Outils Intelligents Section */}
+          <div className="mb-4">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3 flex items-center gap-2">
+               <Wand2 size={12} /> Boîte à outils IA
+            </h4>
+            <div className="space-y-2">
+                 <button onClick={handleExpand} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Maximize2 size={16}/></div>
+                     Développer le texte
+                     {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
+                 </button>
+                 <button onClick={() => navigate('/jury')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center"><Users size={16}/></div>
+                     Simulateur Jury
+                 </button>
+                 <button onClick={() => setShowBiblioPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><Book size={16}/></div>
+                     Bibliographe IA
+                 </button>
             </div>
-          ))}
+          </div>
+
+          <div className="border-t border-slate-100 pt-4">
+            {project.chapters.map((chapter, idx) => (
+                <div key={chapter.id} className="mb-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pl-3 truncate" title={chapter.title}>
+                    {idx + 1}. {chapter.title}
+                </h4>
+                <ul className="space-y-0.5">
+                    {chapter.sections.map((section) => {
+                    const isActive = section.id === activeSectionId;
+                    return (
+                        <li key={section.id}>
+                        <button
+                            onClick={() => {
+                            setActiveChapterId(chapter.id);
+                            setActiveSectionId(section.id);
+                            if(window.innerWidth < 768) setSidebarOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-start gap-2 transition-all ${
+                            isActive 
+                                ? 'bg-indigo-50 text-indigo-900 font-semibold shadow-sm' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                        >
+                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${section.status === 'completed' ? 'bg-green-500' : isActive ? 'bg-indigo-500' : 'bg-slate-300'}`} />
+                            <span className="leading-tight">{section.title}</span>
+                        </button>
+                        </li>
+                    );
+                    })}
+                </ul>
+                </div>
+            ))}
+          </div>
         </div>
         
         {/* Footer Sidebar with Export Menu */}
@@ -383,26 +459,111 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         </div>
       </div>
 
+      {/* BIBLIOGRAPHY PANEL OVERLAY */}
+      {showBiblioPanel && (
+         <div className="absolute inset-0 z-[60] flex justify-end">
+             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowBiblioPanel(false)}></div>
+             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
+                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                     <div className="flex items-center gap-2 font-bold text-slate-800 text-lg">
+                         <Book className="text-blue-600" />
+                         Bibliographe Express
+                     </div>
+                     <button onClick={() => setShowBiblioPanel(false)} className="text-slate-400 hover:text-slate-700"><X /></button>
+                 </div>
+
+                 <div className="p-6 flex-1 overflow-y-auto">
+                     {/* Actions */}
+                     <div className="mb-8 space-y-4">
+                         <button 
+                             onClick={handleSuggestBiblio}
+                             disabled={isBiblioLoading}
+                             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition flex items-center justify-center gap-2"
+                         >
+                             {isBiblioLoading ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : <Wand2 size={18} />}
+                             Suggérer des sources pour ce chapitre
+                         </button>
+                         <p className="text-xs text-slate-500 text-center">L'IA cherche des livres et articles pertinents et formate la citation en APA 7.</p>
+                     </div>
+
+                     {/* Suggestions */}
+                     {suggestedRefs.length > 0 && (
+                         <div className="mb-8">
+                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Suggestions ({suggestedRefs.length})</h4>
+                             <div className="space-y-3">
+                                 {suggestedRefs.map(ref => (
+                                     <div key={ref.id} className="p-3 border border-blue-100 bg-blue-50 rounded-lg text-sm group">
+                                         <p className="text-slate-800 font-medium mb-1">{ref.title}</p>
+                                         <p className="text-slate-500 text-xs mb-2">{ref.author} ({ref.year})</p>
+                                         <div className="flex gap-2">
+                                             <button onClick={() => handleAddRef(ref)} className="flex-1 py-1.5 bg-white border border-blue-200 text-blue-700 rounded font-medium text-xs hover:bg-blue-100">Ajouter</button>
+                                             <button onClick={() => handleCopyCitation(ref.citation)} className="px-3 py-1.5 bg-white border border-blue-200 text-slate-600 rounded hover:bg-slate-50" title="Copier"><Copy size={14}/></button>
+                                         </div>
+                                     </div>
+                                 ))}
+                             </div>
+                         </div>
+                     )}
+
+                     {/* Ma Bibliographie */}
+                     <div>
+                         <div className="flex items-center justify-between mb-3">
+                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ma Bibliographie ({references.length})</h4>
+                             {references.length > 0 && (
+                                 <button onClick={() => {
+                                     const allText = references.map(r => r.citation).join('\n\n');
+                                     navigator.clipboard.writeText(allText);
+                                     alert('Toute la bibliographie a été copiée !');
+                                 }} className="text-xs text-blue-600 hover:underline">Tout copier</button>
+                             )}
+                         </div>
+                         
+                         {references.length === 0 ? (
+                             <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">
+                                 Aucune référence enregistrée.
+                             </div>
+                         ) : (
+                             <div className="space-y-3">
+                                 {references.map((ref, idx) => (
+                                     <div key={idx} className="p-3 border border-slate-200 bg-white rounded-lg text-sm relative group hover:shadow-md transition">
+                                         <p className="text-slate-800 font-serif text-xs leading-relaxed pr-6">{ref.citation}</p>
+                                         <button 
+                                            onClick={() => handleCopyCitation(ref.citation)}
+                                            className="absolute top-2 right-2 text-slate-300 hover:text-blue-600"
+                                         >
+                                             <Copy size={14} />
+                                         </button>
+                                     </div>
+                                 ))}
+                             </div>
+                         )}
+                     </div>
+                 </div>
+             </div>
+         </div>
+      )}
+
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         {/* Top Bar */}
         <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0">
             <button 
               onClick={() => setSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition"
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition shrink-0"
             >
               <Menu size={20} />
             </button>
-            <nav className="hidden md:flex items-center text-sm text-slate-500">
-               <span className="font-medium text-slate-900 truncate max-w-[200px]">{activeChapter?.title}</span>
+            <nav className="hidden md:flex items-center text-sm text-slate-500 overflow-hidden">
+               <span className="font-medium text-slate-900 truncate max-w-[150px]">{activeChapter?.title}</span>
                <span className="mx-2">/</span>
-               <span className="truncate max-w-[200px]">{activeSection?.title}</span>
+               <span className="truncate max-w-[150px]">{activeSection?.title}</span>
             </nav>
           </div>
           
-          <div className="flex items-center gap-2">
-             <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 mr-4 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+          {/* Scrollable Toolbar for Mobile */}
+          <div className="flex items-center gap-2 overflow-x-auto pl-2 scrollbar-hide">
+             <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 mr-4 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 whitespace-nowrap">
                  <Save size={12} />
                  {editorContent ? 'Sauvegardé' : 'Prêt'}
              </div>
@@ -411,7 +572,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
               <button
                 onClick={handleExpand}
                 disabled={isGenerating || !editorContent}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition disabled:opacity-50 group"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
                 title="Transformer des notes en paragraphes"
             >
                 <Maximize2 size={16} />
@@ -423,28 +584,27 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
              <button
                 onClick={() => setShowImproveInput(!showImproveInput)}
                 disabled={isGenerating || !editorContent}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50 group"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
             >
                 <Wand2 size={16} />
                 <span className="hidden md:inline">Améliorer</span>
                 {!isPremium && <Lock size={12} className="text-indigo-400 opacity-70" />}
             </button>
 
-             {/* BUTTON: JURY SIMULATOR - Redirects to new page */}
+             {/* BUTTON: JURY SIMULATOR */}
              <button
                 onClick={() => navigate('/jury')}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition disabled:opacity-50 group"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
                 title="S'entraîner au Grand Oral"
             >
                 <Users size={16} />
                 <span className="hidden md:inline">Coach Jury</span>
-                {/* Free to access */}
             </button>
 
              <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-md shadow-slate-900/10 transition disabled:opacity-70 ml-2"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-md shadow-slate-900/10 transition disabled:opacity-70 ml-2 whitespace-nowrap"
             >
                 {isGenerating ? (
                     <>
@@ -465,7 +625,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         <main className="flex-1 overflow-y-auto relative bg-[#F3F4F6] p-4 md:p-8 flex justify-center">
             
             {/* The "Paper" */}
-            <div className="w-full max-w-[850px] min-h-[calc(100vh-8rem)] bg-white shadow-xl shadow-slate-200/50 rounded-none md:rounded-sm px-6 py-8 md:px-16 md:py-20 relative transition-all">
+            <div className="w-full max-w-[850px] min-h-[calc(100vh-8rem)] bg-white shadow-xl shadow-slate-200/50 rounded-lg md:rounded-sm px-4 py-6 md:px-16 md:py-20 relative transition-all">
                 
                 {/* Contextual Warning */}
                 {generationError && (
@@ -493,7 +653,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                        />
                        <button 
                           onClick={handleImprove}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2 shrink-0"
                        >
                            {isPremium ? 'Go' : <Lock size={14} />}
                        </button>
@@ -502,10 +662,10 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
                 {/* Title in Document */}
                 <div className="mb-8 pb-4 border-b border-slate-100">
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 leading-tight mb-2">
+                    <h1 className="text-xl md:text-3xl font-serif font-bold text-slate-900 leading-tight mb-2">
                         {activeSection?.title}
                     </h1>
-                    <p className="text-sm text-slate-400 font-sans uppercase tracking-widest">
+                    <p className="text-xs md:text-sm text-slate-400 font-sans uppercase tracking-widest">
                         {activeChapter?.title}
                     </p>
                 </div>

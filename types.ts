@@ -23,6 +23,15 @@ export interface Chapter {
   sections: Section[];
 }
 
+export interface Reference {
+  id: string;
+  type: 'book' | 'article' | 'web';
+  title: string;
+  author: string;
+  year: string;
+  citation: string; // Format APA complet
+}
+
 export interface ThesisProject {
   id: string;
   title: string;
