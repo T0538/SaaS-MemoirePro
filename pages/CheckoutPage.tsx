@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShieldCheck, CreditCard, CheckCircle, Lock, GraduationCap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,11 +9,9 @@ export const CheckoutPage: React.FC = () => {
   const handleCheckout = async () => {
     setIsLoading(true);
     try {
-      // DÉTECTION AUTOMATIQUE DE L'URL API
-      const meta = import.meta as any;
-      const apiUrl = meta.env.PROD 
-        ? meta.env.VITE_API_URL || '/create-checkout-session' // Sur Netlify, définir VITE_API_URL
-        : '/create-checkout-session'; // En local, le proxy gère
+      // Appel direct à la fonction Netlify Serverless
+      // L'URL relative /.netlify/functions/... fonctionne automatiquement sur le site déployé
+      const apiUrl = '/.netlify/functions/create-checkout-session';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -26,6 +25,7 @@ export const CheckoutPage: React.FC = () => {
       if (data.url) {
         window.location.href = data.url; // Redirection vers Stripe
       } else {
+        console.error("Erreur réponse:", data);
         alert("Erreur lors de l'initialisation du paiement.");
       }
     } catch (error) {
