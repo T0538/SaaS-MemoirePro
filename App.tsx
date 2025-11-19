@@ -11,6 +11,7 @@ import { PricingPage } from './pages/PricingPage';
 import { BlogPostPage } from './pages/BlogPostPage';
 import { ContactPage } from './pages/ContactPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { SuccessPage } from './pages/SuccessPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GraduationCap } from 'lucide-react';
@@ -154,6 +155,7 @@ const App = () => {
         <Route path="/pricing" element={<MarketingLayout><PricingPage /></MarketingLayout>} />
         <Route path="/contact" element={<MarketingLayout><ContactPage /></MarketingLayout>} />
         <Route path="/checkout" element={<MarketingLayout><CheckoutPage /></MarketingLayout>} />
+        <Route path="/success" element={<MarketingLayout><SuccessPage /></MarketingLayout>} />
         <Route path="/app" element={<ToolApp />} />
       </Routes>
     </Router>

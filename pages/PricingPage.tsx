@@ -20,7 +20,7 @@ export const PricingPage: React.FC = () => {
             <div className="mb-6">
               <h3 className="text-xl font-bold text-slate-900">Découverte</h3>
               <div className="flex items-baseline mt-2">
-                <span className="text-4xl font-serif font-bold text-slate-900">0€</span>
+                <span className="text-4xl font-serif font-bold text-slate-900">0 $</span>
                 <span className="text-slate-500 ml-2">/mois</span>
               </div>
               <p className="text-sm text-slate-500 mt-4">Pour structurer ses idées.</p>
@@ -49,7 +49,7 @@ export const PricingPage: React.FC = () => {
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white">Étudiant Pro</h3>
               <div className="flex items-baseline mt-2">
-                <span className="text-4xl font-serif font-bold text-white">9.90€</span>
+                <span className="text-4xl font-serif font-bold text-white">3 $</span>
                 <span className="text-slate-400 ml-2">/mémoire</span>
               </div>
               <p className="text-sm text-slate-400 mt-4">Tout pour rédiger et valider.</p>
