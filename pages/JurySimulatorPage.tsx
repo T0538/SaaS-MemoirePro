@@ -5,31 +5,31 @@ import { interactWithJury } from '../services/geminiService';
 import { User, MessageSquare, Send, ShieldAlert, Mic, Award, ArrowLeft, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// PERSONAS PRÉDÉFINIS
+// PERSONAS PRÉDÉFINIS AVEC PHOTOS RÉALISTES
 const JURY_PERSONAS: JuryPersona[] = [
   {
     id: '1',
-    name: 'Dr. Martin',
-    role: 'Directeur de Recherche',
-    description: 'Académique pur. Il chasse les imprécisions théoriques et les fautes de méthodologie.',
+    name: 'Pr. Beatrice Kotto',
+    role: 'Directrice de Recherche',
+    description: 'Académique pure et dure. Elle traque les faiblesses bibliographiques et le manque de rigueur scientifique.',
     tone: 'Strict',
-    avatar: '👨‍🏫'
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200'
   },
   {
     id: '2',
-    name: 'Mme. Lefebvre',
-    role: 'Experte Terrain',
-    description: 'Professionnelle du secteur. Elle se fiche de la théorie, elle veut du concret et du ROI.',
+    name: 'M. Thomas Veran',
+    role: 'Directeur Industriel',
+    description: 'Pragmatique orienté résultat. Il se fiche de la théorie, il veut savoir si votre solution est rentable et applicable demain.',
     tone: 'Technique',
-    avatar: '👩‍💼'
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200'
   },
   {
     id: '3',
-    name: 'M. Dubois',
-    role: 'Le Candide',
-    description: 'Il pose des questions "bêtes" qui sont souvent les plus pièges. Teste votre clarté.',
+    name: 'Sarah Lin',
+    role: 'Consultante Externe',
+    description: 'Pose des questions faussement naïves pour tester votre capacité à vulgariser et à défendre vos choix.',
     tone: 'Bienveillant',
-    avatar: '👴'
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200'
   }
 ];
 
@@ -148,12 +148,21 @@ export const JurySimulatorPage: React.FC = () => {
                       <button
                         key={persona.id}
                         onClick={() => setSelectedPersona(persona)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${selectedPersona.id === persona.id ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-100 hover:border-slate-300'}`}
+                        className={`p-4 rounded-xl border-2 text-left transition-all group relative overflow-hidden ${selectedPersona.id === persona.id ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-100 hover:border-slate-300'}`}
                       >
-                        <div className="text-3xl mb-2">{persona.avatar}</div>
-                        <div className="font-bold text-slate-900 text-sm">{persona.name}</div>
-                        <div className="text-xs text-slate-500 mb-2">{persona.role}</div>
-                        <p className="text-[10px] text-slate-400 leading-tight">{persona.description}</p>
+                        <div className="mb-3 relative">
+                          <img 
+                            src={persona.avatar} 
+                            alt={persona.name} 
+                            className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                          />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm shadow-sm border border-slate-100">
+                            {persona.tone === 'Strict' ? '🎓' : persona.tone === 'Technique' ? '💼' : '🤔'}
+                          </div>
+                        </div>
+                        <div className="font-bold text-slate-900 text-sm group-hover:text-amber-700 transition-colors">{persona.name}</div>
+                        <div className="text-xs text-slate-500 mb-2 font-medium">{persona.role}</div>
+                        <p className="text-[10px] text-slate-400 leading-tight line-clamp-3">{persona.description}</p>
                       </button>
                     ))}
                   </div>
@@ -170,15 +179,17 @@ export const JurySimulatorPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex gap-6 h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-140px)]">
             
             {/* Chat Area */}
-            <div className="flex-1 bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden">
+            <div className="flex-1 bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden min-h-[500px]">
               {/* Top Bar Persona */}
               <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm border border-slate-200">
-                  {selectedPersona.avatar}
-                </div>
+                <img 
+                  src={selectedPersona.avatar} 
+                  alt={selectedPersona.name} 
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" 
+                />
                 <div>
                   <h3 className="font-bold text-slate-900">{selectedPersona.name}</h3>
                   <p className="text-xs text-slate-500">{selectedPersona.role} • <span className="text-amber-600">{selectedPersona.tone}</span></p>
@@ -189,27 +200,37 @@ export const JurySimulatorPage: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FDFDFD]">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex gap-3 ${
                       msg.sender === 'user' 
                         ? 'bg-slate-900 text-white rounded-br-none' 
                         : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none'
                     }`}>
-                      {msg.content}
-                      {msg.critique && (
-                        <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 italic flex items-start gap-2">
-                           <MessageSquare size={12} className="mt-0.5" />
-                           Feedback interne: "{msg.critique}"
-                        </div>
+                      {msg.sender === 'jury' && (
+                         <img 
+                           src={selectedPersona.avatar} 
+                           className="w-8 h-8 rounded-full object-cover border border-slate-100 hidden sm:block" 
+                           alt="Jury"
+                         />
                       )}
+                      <div>
+                        {msg.content}
+                        {msg.critique && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 italic flex items-start gap-2">
+                             <MessageSquare size={12} className="mt-0.5" />
+                             Feedback interne: "{msg.critique}"
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
                 {isLoading && (
                    <div className="flex justify-start">
                      <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none flex items-center gap-2">
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                        <img src={selectedPersona.avatar} className="w-6 h-6 rounded-full object-cover" alt="Thinking" />
+                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
                      </div>
                    </div>
                 )}
@@ -239,7 +260,7 @@ export const JurySimulatorPage: React.FC = () => {
             </div>
 
             {/* Sidebar Stats */}
-            <div className="w-72 hidden md:flex flex-col gap-4">
+            <div className="w-full md:w-72 flex flex-col gap-4">
                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <BarChart3 size={14} />
@@ -268,7 +289,7 @@ export const JurySimulatorPage: React.FC = () => {
                   </p>
                </div>
 
-               <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg flex-1 relative overflow-hidden">
+               <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg flex-1 relative overflow-hidden min-h-[200px]">
                   <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
                     <Award size={100} />
                   </div>
