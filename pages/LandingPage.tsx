@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, CheckCircle2, BookOpen, ShieldCheck, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -27,7 +28,7 @@ export const LandingPage: React.FC = () => {
           </p>
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <Link to="/app" className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 font-bold rounded-full hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(255,255,255,0.3)]">
+            <Link to="/signup" className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 font-bold rounded-full hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(255,255,255,0.3)]">
               Commencer Gratuitement
               <ArrowRight size={18} />
             </Link>
@@ -117,7 +118,7 @@ export const LandingPage: React.FC = () => {
               </div>
               
               <div className="mt-10">
-                <Link to="/app" className="text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-2">
+                <Link to="/signup" className="text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-2">
                   Essayer la démo interactive <ArrowRight size={16} />
                 </Link>
               </div>

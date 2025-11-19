@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
 import { Domain, ThesisProject, WizardStep, Chapter } from './types';
 import { SetupStep } from './components/SetupStep';
 import { OutlineReview } from './components/OutlineReview';
@@ -13,6 +13,8 @@ import { BlogPostPage } from './pages/BlogPostPage';
 import { ContactPage } from './pages/ContactPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { SuccessPage } from './pages/SuccessPage';
+import { SignupPage } from './pages/SignupPage';
+import { LoginPage } from './pages/LoginPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GraduationCap } from 'lucide-react';
@@ -28,6 +30,15 @@ const MarketingLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <Footer />
     </div>
   );
+};
+
+// Protection de route
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const user = localStorage.getItem('memoirepro_user');
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
 };
 
 // L'application principale (l'outil)
@@ -95,7 +106,7 @@ const ToolApp = () => {
               </div>
               <div>
                 <span className="text-xl font-serif font-bold tracking-tight block leading-none">MémoirePro</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Espace Étudiant</span>
+                <span className="text--[10px] uppercase tracking-widest text-slate-500 font-semibold">Espace Étudiant</span>
               </div>
             </div>
             <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition">
@@ -160,7 +171,20 @@ const App = () => {
         <Route path="/contact" element={<MarketingLayout><ContactPage /></MarketingLayout>} />
         <Route path="/checkout" element={<MarketingLayout><CheckoutPage /></MarketingLayout>} />
         <Route path="/success" element={<MarketingLayout><SuccessPage /></MarketingLayout>} />
-        <Route path="/app" element={<ToolApp />} />
+        
+        {/* Authentication Routes */}
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected App Route */}
+        <Route 
+          path="/app" 
+          element={
+            <ProtectedRoute>
+              <ToolApp />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
   );

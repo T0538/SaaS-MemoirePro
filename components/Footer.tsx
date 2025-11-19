@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GraduationCap, Linkedin, Twitter, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -30,10 +31,10 @@ export const Footer: React.FC = () => {
           <div>
             <h3 className="font-bold text-lg mb-4 text-indigo-300">Plateforme</h3>
             <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link to="/app" className="hover:text-white transition">L'éditeur (App)</Link></li>
+              <li><Link to="/login" className="hover:text-white transition">Se connecter</Link></li>
+              <li><Link to="/signup" className="hover:text-white transition">Créer un compte</Link></li>
               <li><Link to="/pricing" className="hover:text-white transition">Tarifs Étudiants</Link></li>
               <li><Link to="/contact" className="hover:text-white transition">Offre Écoles</Link></li>
-              <li><Link to="/" className="hover:text-white transition">Témoignages</Link></li>
             </ul>
           </div>
 
