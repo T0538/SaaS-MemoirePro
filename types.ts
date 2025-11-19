@@ -1,3 +1,4 @@
+
 export enum Domain {
   QHSE = 'Qualité, Hygiène, Sécurité, Environnement (QHSE)',
   MARKETING = 'Marketing & Communication',
@@ -43,6 +44,32 @@ export interface BlogPost {
   imageUrl?: string;
   slug: string;
   author: string;
+}
+
+export interface JuryQuestion {
+  id: string;
+  question: string;
+  difficulty: 'Facile' | 'Moyen' | 'Difficile';
+  suggestion: string;
+}
+
+// --- JURY SIMULATOR TYPES ---
+
+export interface JuryPersona {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  tone: 'Strict' | 'Bienveillant' | 'Technique' | 'Provocateur';
+  avatar: string; // Emoji or Icon name
+}
+
+export interface JuryMessage {
+  id: string;
+  sender: 'jury' | 'user';
+  content: string;
+  score?: number; // 0-100 (Feedback hidden or visible)
+  critique?: string; // Internal AI critique
 }
 
 export type WizardStep = 'setup' | 'outline' | 'drafting';

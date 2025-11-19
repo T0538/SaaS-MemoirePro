@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Check, GraduationCap, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -56,16 +57,16 @@ export const PricingPage: React.FC = () => {
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> <strong>Rédaction illimitée</strong> (IA Flash)
+                <Check size={18} className="text-emerald-400" /> <strong>Rédaction illimitée</strong>
               </li>
               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Humanisation du texte v2.5
+                <Check size={18} className="text-emerald-400" /> Humanisation du texte
               </li>
               <li className="flex items-center gap-3 text-slate-300 text-sm">
                 <Check size={18} className="text-emerald-400" /> Export Word & Markdown
               </li>
               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Expertise QHSE & Technique
+                <Check size={18} className="text-emerald-400" /> Expertise Technique
               </li>
             </ul>
             <Link to="/checkout" className="w-full py-3 px-6 rounded-xl bg-indigo-600 text-white font-bold text-center hover:bg-indigo-700 transition shadow-lg shadow-indigo-900/50">

@@ -19,10 +19,6 @@ export const LandingPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-medium mb-8 backdrop-blur-sm">
-            <Zap size={14} />
-            <span>Nouvelle Version : Moteur IA "Human Like" v2.5</span>
-          </div>
           
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight tracking-tight">
             Votre mémoire de Licence,<br/>

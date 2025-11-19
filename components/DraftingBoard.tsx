@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ThesisProject, Section } from '../types';
-import { generateSectionContent, improveText } from '../services/geminiService';
+import { ThesisProject, Section, JuryQuestion } from '../types';
+import { generateSectionContent, improveText, expandContent, generateJuryQuestions } from '../services/geminiService';
 import { 
   Bot, 
   AlertCircle, 
@@ -14,7 +14,11 @@ import {
   Printer,
   ChevronUp,
   Lock,
-  CreditCard
+  CreditCard,
+  Maximize2,
+  Users,
+  X,
+  HelpCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -115,7 +119,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   const handleImprove = async () => {
-      // VERIFICATION PREMIUM
       if (!isPremium) {
           if(confirm("L'humanisation et l'amélioration de texte sont réservées aux membres Pro. Débloquer pour 3$ ?")) {
               navigate('/pricing');
@@ -138,6 +141,32 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       }
   }
 
+  // FEATURE: MAGIC EXPANDER
+  const handleExpand = async () => {
+      if (!isPremium) {
+          if(confirm("Le 'Développeur Intelligent' est réservé aux membres Pro. Débloquer pour 3$ ?")) {
+              navigate('/pricing');
+          }
+          return;
+      }
+
+      if (!editorContent || editorContent.length < 10) {
+          alert("Écrivez au moins quelques notes avant de développer.");
+          return;
+      }
+
+      setIsGenerating(true);
+      try {
+          const expanded = await expandContent(editorContent, project.domain);
+          setEditorContent(expanded);
+          handleSaveContent(expanded, 'completed');
+      } catch(e) {
+          setGenerationError("Erreur lors du développement du texte.");
+      } finally {
+          setIsGenerating(false);
+      }
+  };
+
   const handleSaveContent = (content: string, status: Section['status']) => {
     if (!activeChapterId || !activeSectionId) return;
     
@@ -158,7 +187,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
   // EXPORT WORD (.DOC)
   const handleExportWord = () => {
-    // VERIFICATION PREMIUM
     if (!isPremium) {
         if(confirm("L'export Word (.doc) est réservé aux membres Pro. Débloquer pour 3$ ?")) {
             navigate('/pricing');
@@ -378,7 +406,20 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                  <Save size={12} />
                  {editorContent ? 'Sauvegardé' : 'Prêt'}
              </div>
+
+             {/* BUTTON: EXPAND (MAGIC) */}
+              <button
+                onClick={handleExpand}
+                disabled={isGenerating || !editorContent}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition disabled:opacity-50 group"
+                title="Transformer des notes en paragraphes"
+            >
+                <Maximize2 size={16} />
+                <span className="hidden md:inline">Développer</span>
+                {!isPremium && <Lock size={12} className="text-emerald-400 opacity-70" />}
+            </button>
              
+             {/* BUTTON: IMPROVE */}
              <button
                 onClick={() => setShowImproveInput(!showImproveInput)}
                 disabled={isGenerating || !editorContent}
@@ -389,10 +430,21 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                 {!isPremium && <Lock size={12} className="text-indigo-400 opacity-70" />}
             </button>
 
+             {/* BUTTON: JURY SIMULATOR - Redirects to new page */}
+             <button
+                onClick={() => navigate('/jury')}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition disabled:opacity-50 group"
+                title="S'entraîner au Grand Oral"
+            >
+                <Users size={16} />
+                <span className="hidden md:inline">Coach Jury</span>
+                {/* Free to access */}
+            </button>
+
              <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-md shadow-slate-900/10 transition disabled:opacity-70"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-md shadow-slate-900/10 transition disabled:opacity-70 ml-2"
             >
                 {isGenerating ? (
                     <>
@@ -434,7 +486,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                            type="text" 
                            value={improveInstruction}
                            onChange={(e) => setImproveInstruction(e.target.value)}
-                           placeholder={!isPremium ? "Fonctionnalité réservée aux membres Pro..." : "Instruction..."}
+                           placeholder={!isPremium ? "Fonctionnalité réservée aux membres Pro..." : "Instruction (ex: Rends le ton plus formel)..."}
                            disabled={!isPremium}
                            className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white min-w-0 disabled:bg-slate-100"
                            onKeyDown={(e) => e.key === 'Enter' && handleImprove()}

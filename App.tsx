@@ -15,6 +15,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { SuccessPage } from './pages/SuccessPage';
 import { SignupPage } from './pages/SignupPage';
 import { LoginPage } from './pages/LoginPage';
+import { JurySimulatorPage } from './pages/JurySimulatorPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GraduationCap } from 'lucide-react';
@@ -176,12 +177,20 @@ const App = () => {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected App Route */}
+        {/* Protected App Routes */}
         <Route 
           path="/app" 
           element={
             <ProtectedRoute>
               <ToolApp />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/jury" 
+          element={
+            <ProtectedRoute>
+              <JurySimulatorPage />
             </ProtectedRoute>
           } 
         />

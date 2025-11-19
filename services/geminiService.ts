@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { Domain, Chapter, Section } from '../types';
+import { Domain, Chapter, Section, JuryQuestion, JuryPersona, JuryMessage } from '../types';
 
 // Helper to create ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -178,4 +179,132 @@ export const improveText = async (text: string, instruction: string): Promise<st
   } catch (e) {
     return text;
   }
+};
+
+// FEATURE PREMIUM : Magic Expander
+export const expandContent = async (text: string, domain: string): Promise<string> => {
+  try {
+    const prompt = `
+      Tu es un expert académique en ${domain}.
+      Ta mission : Prendre ces notes en vrac (bullet points ou phrases courtes) et les transformer en paragraphes académiques denses et structurés.
+      
+      Contenu à développer : "${text}"
+
+      Règles :
+      1. Garde le sens original mais multiplie le volume par 3.
+      2. Ajoute des connecteurs logiques (En outre, Par ailleurs, C'est pourquoi).
+      3. Intègre des exemples théoriques pertinents liés au domaine.
+      4. Utilise un style impersonnel et soutenu.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text || text;
+  } catch (e) {
+    console.error("Expand Error", e);
+    throw new Error("Erreur lors du développement du texte.");
+  }
+};
+
+// FEATURE PREMIUM : Jury Simulator (Simple)
+export const generateJuryQuestions = async (text: string, domain: string): Promise<JuryQuestion[]> => {
+  try {
+    const prompt = `
+      Agis comme un jury de soutenance de fin d'études, très exigeant et pointilleux, spécialisé en ${domain}.
+      Lis le texte suivant (extrait de mémoire) : "${text.substring(0, 2000)}..."
+
+      Génère 3 questions difficiles que tu poserais à l'étudiant pour tester la solidité de son raisonnement.
+      Pour chaque question, fournis une suggestion de réponse idéale.
+      
+      Réponds UNIQUEMENT en JSON avec ce format :
+      [
+        { "question": "...", "difficulty": "Moyen", "suggestion": "..." },
+        { "question": "...", "difficulty": "Difficile", "suggestion": "..." }
+      ]
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+
+    const data = JSON.parse(response.text || "[]");
+    return data.map((q: any) => ({
+      id: generateId(),
+      question: q.question,
+      difficulty: q.difficulty,
+      suggestion: q.suggestion
+    }));
+  } catch (e) {
+    console.error("Jury Error", e);
+    return [];
+  }
+};
+
+// FEATURE PREMIUM : Jury Simulator (Immersive Chat)
+export const interactWithJury = async (
+    history: JuryMessage[], 
+    persona: JuryPersona, 
+    topic: string
+  ): Promise<{ content: string; score: number; critique: string }> => {
+  
+    const lastUserMessage = history.filter(m => m.sender === 'user').pop()?.content || "Je suis prêt.";
+  
+    const systemPrompt = `
+      Tu incarnes ${persona.name}, un ${persona.role}.
+      Ton caractère est : ${persona.tone}.
+      Tu participes à la soutenance du mémoire sur le sujet : "${topic}".
+      
+      Ta mission :
+      1. Analyser la réponse de l'étudiant.
+      2. Attribuer une note de crédibilité/conviction sur 100.
+      3. Faire une critique interne (pourquoi cette note).
+      4. Poser la question suivante ou rebondir pour piéger l'étudiant si sa réponse est faible.
+      
+      Reste toujours dans ton rôle. Sois réaliste, parfois sec si le persona est 'Strict', ou pointilleux si 'Technique'.
+      Ne sois pas complaisant.
+      
+      Réponds UNIQUEMENT au format JSON :
+      {
+        "jury_response": "Ta réaction et ta prochaine question ici...",
+        "score": 75,
+        "critique": "L'étudiant est vague sur la méthodologie..."
+      }
+    `;
+  
+    const chatHistory = history.map(m => `${m.sender === 'jury' ? 'JURY' : 'ETUDIANT'}: ${m.content}`).join('\n');
+  
+    const prompt = `
+      ${systemPrompt}
+  
+      HISTORIQUE DE LA SOUTENANCE :
+      ${chatHistory}
+  
+      ETUDIANT (Dernière réponse) : "${lastUserMessage}"
+    `;
+  
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: { responseMimeType: "application/json" }
+      });
+  
+      const data = JSON.parse(response.text || "{}");
+      return {
+        content: data.jury_response || "Pouvez-vous préciser ?",
+        score: data.score || 50,
+        critique: data.critique || "Réponse moyenne."
+      };
+    } catch (e) {
+      console.error("Jury Chat Error", e);
+      return {
+        content: "Je n'ai pas bien saisi, pouvez-vous reformuler ?",
+        score: 50,
+        critique: "Erreur technique."
+      };
+    }
 };

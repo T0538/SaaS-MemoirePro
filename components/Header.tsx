@@ -98,6 +98,11 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
+          <Link to="/jury" className="text-sm font-medium text-amber-600 hover:text-amber-800 flex items-center gap-1">
+            <Users size={16} />
+            Simulateur Jury
+          </Link>
+
           <Link to="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900">Tarifs</Link>
         </nav>
 
@@ -175,6 +180,7 @@ export const Header: React.FC = () => {
               )}
             </div>
 
+            <Link to="/jury" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-slate-100 pb-4 text-amber-600">Simulateur Jury</Link>
             <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-slate-100 pb-4">Tarifs</Link>
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-slate-100 pb-4">Contact</Link>
           </nav>
