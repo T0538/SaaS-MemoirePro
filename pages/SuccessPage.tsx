@@ -1,8 +1,17 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SuccessPage: React.FC = () => {
+  
+  useEffect(() => {
+    // ACTIVATION DE LA LICENCE PRO
+    localStorage.setItem('memoirepro_license', 'premium');
+    // On peut aussi stocker la date pour info
+    localStorage.setItem('memoirepro_license_date', new Date().toISOString());
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 animate-fade-in">
       <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-10 text-center border border-slate-100 relative overflow-hidden">

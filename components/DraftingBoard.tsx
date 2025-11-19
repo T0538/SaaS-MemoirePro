@@ -1,21 +1,22 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ThesisProject, Section } from '../types';
 import { generateSectionContent, improveText } from '../services/geminiService';
 import { 
   Bot, 
-  Check, 
   AlertCircle, 
   Download, 
   Menu,
   Save,
   Wand2,
-  MoreVertical,
   FileText,
   ChevronLeft,
   Printer,
-  FileCheck,
-  ChevronUp
+  ChevronUp,
+  Lock,
+  CreditCard
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface DraftingBoardProps {
   project: ThesisProject;
@@ -23,9 +24,9 @@ interface DraftingBoardProps {
 }
 
 export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateProject }) => {
+  const navigate = useNavigate();
   const [activeChapterId, setActiveChapterId] = useState<string>(project.chapters[0]?.id || '');
   const [activeSectionId, setActiveSectionId] = useState<string>(project.chapters[0]?.sections[0]?.id || '');
-  // Sur mobile, le menu commence fermé. Sur desktop, ouvert.
   const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   
   // Export Menu State
@@ -38,6 +39,27 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [improveInstruction, setImproveInstruction] = useState('');
   const [showImproveInput, setShowImproveInput] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // LICENCE STATE
+  const [isPremium, setIsPremium] = useState(false);
+  const [generationCount, setGenerationCount] = useState(0);
+  const MAX_FREE_GENERATIONS = 3;
+
+  useEffect(() => {
+    const license = localStorage.getItem('memoirepro_license');
+    setIsPremium(license === 'premium');
+    
+    const count = parseInt(localStorage.getItem('memoirepro_gen_count') || '0');
+    setGenerationCount(count);
+  }, []);
+
+  const incrementGenCount = () => {
+    if (!isPremium) {
+      const newCount = generationCount + 1;
+      setGenerationCount(newCount);
+      localStorage.setItem('memoirepro_gen_count', newCount.toString());
+    }
+  };
 
   const activeChapter = project.chapters.find(c => c.id === activeChapterId);
   const activeSection = activeChapter?.sections.find(s => s.id === activeSectionId);
@@ -62,6 +84,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const handleGenerate = async () => {
     if (!activeChapter || !activeSection) return;
     
+    // VERIFICATION LIMITES GRATUITES
+    if (!isPremium && generationCount >= MAX_FREE_GENERATIONS && !editorContent) {
+      if(confirm(`Vous avez atteint la limite de ${MAX_FREE_GENERATIONS} sections gratuites. Passez à la version Pro pour continuer en illimité (3$).`)) {
+        navigate('/pricing');
+      }
+      return;
+    }
+    
     setIsGenerating(true);
     setGenerationError(null);
     
@@ -75,6 +105,8 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       );
       
       handleSaveContent(content, 'completed');
+      incrementGenCount();
+
     } catch (err) {
       setGenerationError("L'IA a rencontré un problème. Réessayez.");
     } finally {
@@ -83,6 +115,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   const handleImprove = async () => {
+      // VERIFICATION PREMIUM
+      if (!isPremium) {
+          if(confirm("L'humanisation et l'amélioration de texte sont réservées aux membres Pro. Débloquer pour 3$ ?")) {
+              navigate('/pricing');
+          }
+          return;
+      }
+
       if (!improveInstruction || !editorContent) return;
       setIsGenerating(true);
       try {
@@ -118,6 +158,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
   // EXPORT WORD (.DOC)
   const handleExportWord = () => {
+    // VERIFICATION PREMIUM
+    if (!isPremium) {
+        if(confirm("L'export Word (.doc) est réservé aux membres Pro. Débloquer pour 3$ ?")) {
+            navigate('/pricing');
+        }
+        return;
+    }
+
     const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title><style>body { font-family: 'Times New Roman', serif; font-size: 12pt; }</style></head><body>";
     const postHtml = "</body></html>";
     
@@ -128,7 +176,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         htmlContent += `<h2 style="page-break-before: always; color: #2e3546; font-size: 18pt; margin-top: 20px;">${c.title}</h2>`;
         c.sections.forEach(s => {
             htmlContent += `<h3 style="color: #4f46e5; font-size: 14pt; margin-top: 15px;">${s.title}</h3>`;
-            // Remplace les sauts de ligne simples par des paragraphes pour Word
             const paragraphs = (s.content || 'Section vide').split('\n').filter(p => p.trim() !== '').map(p => `<p style="text-align: justify; line-height: 1.5;">${p}</p>`).join('');
             htmlContent += paragraphs;
         });
@@ -144,7 +191,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     const downloadLink = document.createElement("a");
     document.body.appendChild(downloadLink);
     
-    // @ts-ignore - msSaveOrOpenBlob is IE specific
+    // @ts-ignore
     if((navigator as any).msSaveOrOpenBlob ){
         // @ts-ignore
         (navigator as any).msSaveOrOpenBlob(blob, `memoire_${project.title.substring(0,10)}.doc`);
@@ -208,7 +255,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   return (
-    // Important: h-[calc(100vh)] is crucial here to make it act like an app despite global scroll
     <div className="flex h-screen bg-[#F3F4F6] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
       
       {/* Mobile Sidebar Backdrop */}
@@ -228,6 +274,23 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
             </div>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white"><ChevronLeft /></button>
         </div>
+
+        {/* FREE TIER BANNER */}
+        {!isPremium && (
+            <div className="bg-indigo-50 p-4 border-b border-indigo-100">
+                <div className="flex items-center justify-between text-xs font-bold text-indigo-900 mb-2">
+                    <span>Essai Gratuit</span>
+                    <span>{generationCount}/{MAX_FREE_GENERATIONS}</span>
+                </div>
+                <div className="w-full bg-indigo-200 rounded-full h-1.5 mb-3">
+                    <div className="bg-indigo-600 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((generationCount/MAX_FREE_GENERATIONS)*100, 100)}%` }}></div>
+                </div>
+                <button onClick={() => navigate('/pricing')} className="w-full flex items-center justify-center gap-2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">
+                    <CreditCard size={12} />
+                    Passer Pro (3$)
+                </button>
+            </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
           {project.chapters.map((chapter, idx) => (
@@ -266,9 +329,12 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         {/* Footer Sidebar with Export Menu */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 relative">
              <div className={`absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all origin-bottom duration-200 ${showExportMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-                 <button onClick={handleExportWord} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-100">
-                     <FileText size={16} className="text-blue-600" />
-                     <span>Word (.doc)</span>
+                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-100">
+                     <div className="flex items-center gap-3">
+                        <FileText size={16} className="text-blue-600" />
+                        <span>Word (.doc)</span>
+                     </div>
+                     {!isPremium && <Lock size={12} className="text-slate-400" />}
                  </button>
                  <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
                      <Printer size={16} className="text-red-600" />
@@ -316,10 +382,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
              <button
                 onClick={() => setShowImproveInput(!showImproveInput)}
                 disabled={isGenerating || !editorContent}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50 group"
             >
                 <Wand2 size={16} />
                 <span className="hidden md:inline">Améliorer</span>
+                {!isPremium && <Lock size={12} className="text-indigo-400 opacity-70" />}
             </button>
 
              <button
@@ -367,15 +434,16 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                            type="text" 
                            value={improveInstruction}
                            onChange={(e) => setImproveInstruction(e.target.value)}
-                           placeholder="Instruction..."
-                           className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white min-w-0"
+                           placeholder={!isPremium ? "Fonctionnalité réservée aux membres Pro..." : "Instruction..."}
+                           disabled={!isPremium}
+                           className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white min-w-0 disabled:bg-slate-100"
                            onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
                        />
                        <button 
                           onClick={handleImprove}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2"
                        >
-                           Go
+                           {isPremium ? 'Go' : <Lock size={14} />}
                        </button>
                    </div>
                 )}

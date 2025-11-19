@@ -1,7 +1,5 @@
 
-const stripeKeyPart1 = 'sk_test_';
-const stripeKeyPart2 = '51SVEXFHg3BhYAtWaFKxCqiF5yFb2q2cL7sFWkWxIu4gX3qebEwX1xIrc3uiBNX4UYxWi8uAzN1N7svGume4VXWI200zV3nudoX';
-const stripe = require('stripe')(stripeKeyPart1 + stripeKeyPart2);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -28,12 +26,9 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Récupérer l'URL d'origine pour la redirection (localhost ou netlify.app)
+    // Récupérer l'URL d'origine pour la redirection
     const referer = event.headers.referer || event.headers.origin;
-    // Fallback si le referer est manquant
     const baseUrl = referer ? referer.split('#')[0] : 'https://memoirepro.netlify.app';
-    
-    // Nettoyer l'URL (enlever le slash de fin si présent)
     const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
     const session = await stripe.checkout.sessions.create({

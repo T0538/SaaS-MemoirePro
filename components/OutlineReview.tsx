@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Chapter } from '../types';
-import { FileText, CheckCircle, RefreshCcw, Trash2, Plus, GripVertical, Download, ChevronDown, Printer, ArrowRight } from 'lucide-react';
+import { FileText, CheckCircle, RefreshCcw, Trash2, Plus, GripVertical, Download, ChevronDown, Printer, ArrowRight, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface OutlineReviewProps {
   chapters: Chapter[];
@@ -9,8 +11,15 @@ interface OutlineReviewProps {
 }
 
 export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfirm, onRegenerate }) => {
+  const navigate = useNavigate();
   const [editableChapters, setEditableChapters] = React.useState<Chapter[]>(chapters);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    const license = localStorage.getItem('memoirepro_license');
+    setIsPremium(license === 'premium');
+  }, []);
 
   const handleSectionChange = (chapIndex: number, secIndex: number, val: string) => {
     const newChaps = [...editableChapters];
@@ -37,6 +46,14 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
 
   // EXPORT WORD (.DOC) - PLAN UNIQUEMENT
   const handleExportWord = () => {
+    // CHECK PREMIUM
+    if (!isPremium) {
+        if(confirm("L'export Word (.doc) est réservé aux membres Pro. Débloquer pour 3$ ?")) {
+            navigate('/pricing');
+        }
+        return;
+    }
+
     const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export Plan</title><style>body { font-family: 'Times New Roman', serif; font-size: 12pt; } h1 { text-align: center; } h2 { color: #2e3546; margin-top: 20px; } ul { margin-bottom: 15px; } li { margin-bottom: 5px; }</style></head><body>";
     const postHtml = "</body></html>";
     
@@ -147,9 +164,12 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
                  
                  {showExportMenu && (
                      <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-fade-in">
-                         <button onClick={handleExportWord} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-50">
-                             <FileText size={16} className="text-blue-600" />
-                             <span>Word (.doc)</span>
+                         <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-50">
+                             <div className="flex items-center gap-3">
+                                <FileText size={16} className="text-blue-600" />
+                                <span>Word (.doc)</span>
+                             </div>
+                             {!isPremium && <Lock size={12} className="text-slate-400" />}
                          </button>
                          <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
                              <Printer size={16} className="text-red-600" />

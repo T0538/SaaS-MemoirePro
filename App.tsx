@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { Domain, ThesisProject, WizardStep, Chapter } from './types';
 import { SetupStep } from './components/SetupStep';
@@ -34,6 +35,9 @@ const ToolApp = () => {
   const [step, setStep] = useState<WizardStep>('setup');
   const [project, setProject] = useState<ThesisProject | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Au chargement, on pourrait vérifier le status Premium ici aussi si besoin
+  // Mais pour l'instant, DraftingBoard gère sa propre logique
 
   const handleSetupComplete = async (data: { title: string; domain: Domain; context: string; importedOutline?: string }) => {
     setLoading(true);
