@@ -6,14 +6,28 @@ export const ContactPage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Configuration Netlify Forms
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulation d'envoi
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1500);
+
+    const myForm = e.currentTarget;
+    const formData = new FormData(myForm);
+
+    // Envoi des données à Netlify via fetch
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(formData as any).toString(),
+    })
+      .then(() => {
+        setIsLoading(false);
+        setIsSubmitted(true);
+      })
+      .catch((error) => {
+        alert("Erreur lors de l'envoi. Veuillez réessayer.");
+        setIsLoading(false);
+      });
   };
 
   if (isSubmitted) {
@@ -81,17 +95,26 @@ export const ContactPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Formulaire */}
+          {/* Formulaire Netlify */}
           <div className="bg-white rounded-3xl shadow-lg p-8 md:p-10 border border-slate-200">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form 
+              name="contact" 
+              method="POST" 
+              data-netlify="true" 
+              onSubmit={handleSubmit} 
+              className="space-y-6"
+            >
+              {/* Champ caché obligatoire pour Netlify */}
+              <input type="hidden" name="form-name" value="contact" />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prénom</label>
-                  <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="prenom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom</label>
-                  <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="nom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               </div>
 
@@ -99,7 +122,7 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email professionnel</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input required type="email" placeholder="nom@ecole.fr" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="email" name="email" placeholder="nom@ecole.fr" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               </div>
 
@@ -107,7 +130,7 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Établissement / Entreprise</label>
                 <div className="relative">
                   <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input required type="text" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="etablissement" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                 </div>
               </div>
 
@@ -115,7 +138,7 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Message</label>
                 <div className="relative">
                   <MessageSquare className="absolute left-4 top-4 text-slate-400" size={18} />
-                  <textarea required rows={4} placeholder="Nombre d'étudiants, besoins spécifiques..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+                  <textarea required name="message" rows={4} placeholder="Nombre d'étudiants, besoins spécifiques..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
                 </div>
               </div>
 

@@ -25,7 +25,8 @@ interface DraftingBoardProps {
 export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateProject }) => {
   const [activeChapterId, setActiveChapterId] = useState<string>(project.chapters[0]?.id || '');
   const [activeSectionId, setActiveSectionId] = useState<string>(project.chapters[0]?.sections[0]?.id || '');
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  // Sur mobile, le menu commence fermé. Sur desktop, ouvert.
+  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   
   // Export Menu State
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -209,6 +210,15 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   return (
     // Important: h-[calc(100vh)] is crucial here to make it act like an app despite global scroll
     <div className="flex h-screen bg-[#F3F4F6] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
+      
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-10 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-20 absolute md:relative shadow-xl md:shadow-none`}>
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
@@ -216,7 +226,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                 <FileText size={16} className="text-indigo-400"/>
                 <span className="truncate max-w-[150px]">Éditeur Pro</span>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400"><ChevronLeft /></button>
+            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white"><ChevronLeft /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
@@ -282,7 +292,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         {/* Top Bar */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -336,7 +346,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         <main className="flex-1 overflow-y-auto relative bg-[#F3F4F6] p-4 md:p-8 flex justify-center">
             
             {/* The "Paper" */}
-            <div className="w-full max-w-[850px] min-h-[calc(100vh-8rem)] bg-white shadow-xl shadow-slate-200/50 rounded-none md:rounded-sm px-8 py-12 md:px-16 md:py-20 relative transition-all">
+            <div className="w-full max-w-[850px] min-h-[calc(100vh-8rem)] bg-white shadow-xl shadow-slate-200/50 rounded-none md:rounded-sm px-6 py-8 md:px-16 md:py-20 relative transition-all">
                 
                 {/* Contextual Warning */}
                 {generationError && (
@@ -357,8 +367,8 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                            type="text" 
                            value={improveInstruction}
                            onChange={(e) => setImproveInstruction(e.target.value)}
-                           placeholder="Instruction à l'IA (ex: 'Rends ce passage plus nuancé', 'Ajoute un exemple QHSE')..."
-                           className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white"
+                           placeholder="Instruction..."
+                           className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white min-w-0"
                            onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
                        />
                        <button 
@@ -372,7 +382,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
                 {/* Title in Document */}
                 <div className="mb-8 pb-4 border-b border-slate-100">
-                    <h1 className="text-3xl font-serif font-bold text-slate-900 leading-tight mb-2">
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 leading-tight mb-2">
                         {activeSection?.title}
                     </h1>
                     <p className="text-sm text-slate-400 font-sans uppercase tracking-widest">
@@ -398,7 +408,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                     
                     <textarea
                         ref={textareaRef}
-                        className="w-full h-full resize-none outline-none border-none p-0 text-lg leading-[1.8] text-slate-800 font-serif placeholder-slate-300 bg-transparent overflow-hidden"
+                        className="w-full h-full resize-none outline-none border-none p-0 text-base md:text-lg leading-[1.8] text-slate-800 font-serif placeholder-slate-300 bg-transparent overflow-hidden"
                         placeholder="Le contenu de votre section apparaîtra ici. Cliquez sur 'Générer (IA)' pour commencer ou écrivez directement..."
                         value={editorContent}
                         onChange={(e) => {
