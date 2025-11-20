@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ThesisProject, Section, JuryQuestion, Reference, SourceDoc } from '../types';
 import { generateSectionContent, improveText, expandContent, generateJuryQuestions, suggestReferences, askDocumentContext } from '../services/geminiService';
@@ -31,7 +30,7 @@ import {
   Search,
   MessageSquare,
   ArrowRight,
-  Check // Added Check icon for date validation
+  Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -74,7 +73,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
   // PLANNING COACH STATE
   const [showDateInput, setShowDateInput] = useState(false);
-  const [tempDeadline, setTempDeadline] = useState(''); // Temporary state for input
+  const [tempDeadline, setTempDeadline] = useState('');
   const [stats, setStats] = useState({ wordCount: 0, daysLeft: 0, dailyGoal: 0, progress: 0 });
 
   // LICENCE STATE
@@ -112,7 +111,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     if (project.deadline) {
       const today = new Date();
       const deadlineDate = new Date(project.deadline);
-      // Reset hours to compare dates properly
       today.setHours(0,0,0,0);
       deadlineDate.setHours(0,0,0,0);
       
@@ -122,7 +120,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       if (daysLeft > 0) {
         dailyGoal = Math.max(0, Math.ceil((TARGET_WORDS - totalWords) / daysLeft));
       } else if (daysLeft < 0) {
-        daysLeft = 0; // Avoid negative days display if passed
+        daysLeft = 0;
       }
     }
 
@@ -179,7 +177,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const handleGenerate = async () => {
     if (!activeChapter || !activeSection) return;
     
-    // VERIFICATION LIMITES GRATUITES
     if (!isPremium && generationCount >= MAX_FREE_GENERATIONS && !editorContent) {
       if(confirm(`Vous avez atteint la limite de ${MAX_FREE_GENERATIONS} sections gratuites. Passez à la version Pro pour continuer en illimité (3$).`)) {
         navigate('/pricing');
@@ -459,13 +456,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       )}
 
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] absolute md:relative shadow-xl md:shadow-none`}>
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-72'} transition-transform duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] fixed md:relative w-72 shadow-xl md:shadow-none`}>
+        <div className="p-4 h-16 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
             <div className="flex items-center gap-2 font-bold">
                 <FileText size={16} className="text-emerald-400"/>
                 <span className="truncate max-w-[150px]">Éditeur Pro</span>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white"><ChevronLeft /></button>
+            <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 hover:bg-white/10 rounded"><ChevronLeft size={20} /></button>
         </div>
 
         {/* FREE TIER BANNER */}
@@ -532,21 +529,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                           </div>
                           <p className="text-[10px] text-slate-400 mt-1 text-right">{stats.wordCount} / 10 000 mots</p>
                       </div>
-
-                      <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                          <div className="flex items-center gap-2 mb-1">
-                              <Target size={14} className="text-emerald-600" />
-                              <span className="text-xs font-bold text-slate-800">Objectif du Jour</span>
-                          </div>
-                          <p className="text-sm text-slate-600 font-medium">
-                              {stats.dailyGoal > 0 ? `Écrire ${stats.dailyGoal} mots` : "Objectif atteint ! 🎉"}
-                          </p>
-                      </div>
                   </div>
               )}
           </div>
 
-          {/* Outils Intelligents Section - UNIFIED GREEN */}
+          {/* Outils Intelligents Section */}
           <div className="mb-4">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3 flex items-center gap-2">
                <Wand2 size={12} /> Boîte à outils IA
@@ -587,7 +574,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                             onClick={() => {
                             setActiveChapterId(chapter.id);
                             setActiveSectionId(section.id);
-                            if(window.innerWidth < 768) setSidebarOpen(false);
+                            handleToolSelect();
                             }}
                             className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-start gap-2 transition-all ${
                             isActive 
@@ -606,37 +593,9 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
             ))}
           </div>
         </div>
-        
-        {/* Footer Sidebar with Export Menu */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 relative">
-             <div className={`absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all origin-bottom duration-200 ${showExportMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-100">
-                     <div className="flex items-center gap-3">
-                        <FileText size={16} className="text-emerald-600" />
-                        <span>Word (.doc)</span>
-                     </div>
-                     {!isPremium && <Lock size={12} className="text-slate-400" />}
-                 </button>
-                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
-                     <Printer size={16} className="text-emerald-600" />
-                     <span>PDF (Impression)</span>
-                 </button>
-             </div>
-
-             <button 
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition shadow-sm"
-             >
-                <div className="flex items-center gap-2">
-                    <Download size={16} />
-                    Exporter
-                </div>
-                <ChevronUp size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
-             </button>
-        </div>
       </div>
 
-      {/* BIBLIOGRAPHY PANEL OVERLAY */}
+      {/* BIBLIOGRAPHY PANEL OVERLAY - RESTORED */}
       {showBiblioPanel && (
          <div className="absolute inset-0 z-[110] flex justify-end">
              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowBiblioPanel(false)}></div>
@@ -720,7 +679,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
          </div>
       )}
 
-      {/* DOC CHAT PANEL OVERLAY */}
+      {/* DOC CHAT PANEL OVERLAY - RESTORED */}
       {showDocPanel && (
          <div className="absolute inset-0 z-[110] flex justify-end">
              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowDocPanel(false)}></div>
@@ -804,45 +763,47 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
          </div>
       )}
 
+
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        {/* Top Bar */}
+        
+        {/* Top Bar - Optimized Text Layout */}
         <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-[30]">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 overflow-hidden">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+              className={`md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg shrink-0 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : ''}`}
             >
               <Menu size={20} />
             </button>
             
-            <div className="flex flex-col">
-               <div className="flex items-center gap-2 text-xs text-slate-400 uppercase tracking-wider font-bold">
-                  <span>{activeChapter?.title || 'Chapitre'}</span>
-                  <ChevronRight size={12} />
-                  <span>{activeSection?.title || 'Section'}</span>
+            {/* Text Container with min-w-0 for truncation */}
+            <div className="flex flex-col min-w-0 justify-center">
+               <div className="flex items-center gap-1 text-[10px] md:text-xs text-slate-400 uppercase tracking-wider font-bold truncate leading-none mb-0.5">
+                  <span className="truncate">{activeChapter?.title || 'Chapitre'}</span>
+                  <ChevronRight size={10} className="shrink-0" />
+                  <span className="text-emerald-600 truncate">Section</span>
                </div>
-               <div className="flex items-center gap-2">
-                 {activeSection?.status === 'completed' && <CheckCircle size={14} className="text-emerald-500"/>}
-                 <span className="font-bold text-slate-800 text-sm md:text-base truncate max-w-[200px] md:max-w-md">
-                   {activeSection?.title}
+               <div className="flex items-center gap-2 min-w-0">
+                 {activeSection?.status === 'completed' && <CheckCircle size={14} className="text-emerald-500 shrink-0"/>}
+                 <span className="font-bold text-slate-800 text-sm md:text-base truncate" title={activeSection?.title}>
+                   {activeSection?.title || 'Titre de la section'}
                  </span>
                </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-             {/* Saving Indicator */}
+          <div className="flex items-center gap-3 shrink-0 ml-2">
              <div className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                 {isGenerating ? (
                    <span className="text-emerald-600 flex items-center gap-1">
                       <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-                      Rédaction IA...
+                      <span className="hidden sm:inline">Rédaction...</span>
                    </span>
                 ) : (
                    <>
                      <Save size={12} />
-                     <span>Enregistré</span>
+                     <span className="hidden sm:inline">Enregistré</span>
                    </>
                 )}
              </div>
@@ -863,7 +824,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                        <input 
                          type="text"
                          className="flex-1 text-sm outline-none text-slate-700 placeholder-slate-400 bg-transparent"
-                         placeholder="Ex: Rends le ton plus formel, Ajoute une citation..."
+                         placeholder="Ex: Rends le ton plus formel..."
                          value={improveInstruction}
                          onChange={(e) => setImproveInstruction(e.target.value)}
                          onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
@@ -882,13 +843,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                        onClick={() => setShowImproveInput(true)}
                        className="flex-1 text-left text-sm text-slate-400 hover:text-slate-600 transition"
                     >
-                       Demander à l'IA d'améliorer, reformuler ou corriger ce texte...
+                       Demander à l'IA d'améliorer ou reformuler...
                     </button>
                  )}
               </div>
 
               {/* Paper */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[60vh] p-4 md:p-16 relative cursor-text" onClick={() => textareaRef.current?.focus()}>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[60vh] p-6 md:p-16 relative cursor-text" onClick={() => textareaRef.current?.focus()}>
                  {generationError && (
                     <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2">
                        <AlertCircle size={16} />
@@ -904,11 +865,10 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                        handleSaveContent(e.target.value, 'pending');
                     }}
                     className="w-full h-full resize-none outline-none text-slate-800 text-lg leading-relaxed font-serif placeholder-slate-300 bg-transparent overflow-hidden"
-                    placeholder="Commencez à écrire ou utilisez 'Générer' pour laisser l'IA rédiger le premier jet..."
+                    placeholder="Commencez à écrire ou utilisez 'Générer'..."
                     spellCheck={false}
                  />
 
-                 {/* Floating Action Button if empty */}
                  {!editorContent && !isGenerating && (
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-full px-4">
                        <button 
@@ -924,7 +884,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
               </div>
            </div>
         </div>
-
       </div>
     </div>
   );
