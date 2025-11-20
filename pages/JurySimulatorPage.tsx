@@ -116,7 +116,7 @@ export const JurySimulatorPage: React.FC = () => {
         
         <div className="flex flex-col items-center">
             <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Entraînement</span>
-            <h1 className="font-serif font-bold text-slate-900">Grand Oral Simulator</h1>
+            <h1 className="font-serif font-bold text-slate-900 text-sm md:text-base">Grand Oral Simulator</h1>
         </div>
 
         <div className="w-10 md:w-24 flex justify-end">
@@ -131,18 +131,19 @@ export const JurySimulatorPage: React.FC = () => {
       <main className="flex-1 overflow-hidden flex flex-col relative">
         
         {step === 'setup' ? (
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center min-h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50 via-slate-50 to-slate-100">
-            <div className="w-full max-w-4xl mx-auto animate-fade-in">
+          // FIX MOBILE: Utilisation de overflow-y-auto et min-h-full pour permettre le scroll si le clavier cache l'input
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col items-center justify-start md:justify-center min-h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50 via-slate-50 to-slate-100">
+            <div className="w-full max-w-4xl mx-auto animate-fade-in py-10 md:py-0">
               
-              <div className="text-center mb-12">
-                  <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Configurez votre Jury</h2>
-                  <p className="text-slate-600 text-lg max-w-2xl mx-auto">L'IA va incarner un profil spécifique pour tester votre repartie. Choisissez votre opposant.</p>
+              <div className="text-center mb-8 md:mb-12">
+                  <h2 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Configurez votre Jury</h2>
+                  <p className="text-slate-600 text-sm md:text-lg max-w-2xl mx-auto">L'IA va incarner un profil spécifique pour tester votre repartie. Choisissez votre opposant.</p>
               </div>
 
-              <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 relative overflow-hidden">
+              <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-6 md:p-12 relative overflow-hidden mb-20 md:mb-0">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
-                <div className="space-y-10">
+                <div className="space-y-8 md:space-y-10">
                   {/* Sujet */}
                   <div>
                     <label className="block text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -151,7 +152,7 @@ export const JurySimulatorPage: React.FC = () => {
                     </label>
                     <input 
                       type="text" 
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-lg shadow-inner placeholder-slate-400 transition-all"
+                      className="w-full px-4 py-3 md:px-6 md:py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-base md:text-lg shadow-inner placeholder-slate-400 transition-all"
                       placeholder="Ex: L'impact de l'IA sur le management..."
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
@@ -164,33 +165,33 @@ export const JurySimulatorPage: React.FC = () => {
                         <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">2</span>
                         Qui vous interroge ?
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                       {JURY_PERSONAS.map(persona => (
                         <button
                           key={persona.id}
                           onClick={() => setSelectedPersona(persona)}
-                          className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group hover:shadow-lg ${selectedPersona.id === persona.id ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-slate-100 bg-white hover:border-emerald-200'}`}
+                          className={`relative p-4 md:p-6 rounded-2xl border-2 text-left transition-all duration-300 group hover:shadow-lg ${selectedPersona.id === persona.id ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-slate-100 bg-white hover:border-emerald-200'}`}
                         >
                           {selectedPersona.id === persona.id && (
                               <div className="absolute top-4 right-4 text-emerald-600">
-                                  <CheckCircle2 size={24} fill="#ecfdf5" />
+                                  <CheckCircle2 size={20} fill="#ecfdf5" />
                               </div>
                           )}
                           
-                          <div className="mb-4 relative inline-block">
+                          <div className="mb-3 md:mb-4 relative inline-block">
                             <img 
                               src={persona.avatar} 
                               alt={persona.name} 
-                              className={`w-20 h-20 rounded-2xl object-cover shadow-md transition-transform duration-500 ${selectedPersona.id === persona.id ? 'scale-105 ring-4 ring-white' : 'grayscale-[30%] group-hover:grayscale-0'}`}
+                              className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover shadow-md transition-transform duration-500 ${selectedPersona.id === persona.id ? 'scale-105 ring-4 ring-white' : 'grayscale-[30%] group-hover:grayscale-0'}`}
                             />
-                            <div className="absolute -bottom-2 -right-2 bg-white px-2 py-1 rounded-md text-xs font-bold shadow-sm border border-slate-100">
+                            <div className="absolute -bottom-2 -right-2 bg-white px-2 py-1 rounded-md text-[10px] font-bold shadow-sm border border-slate-100">
                                 {persona.tone}
                             </div>
                           </div>
                           
-                          <div className="font-bold text-slate-900 text-lg mb-1 group-hover:text-emerald-700 transition-colors">{persona.name}</div>
-                          <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">{persona.role}</div>
-                          <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">{persona.description}</p>
+                          <div className="font-bold text-slate-900 text-base md:text-lg mb-1 group-hover:text-emerald-700 transition-colors">{persona.name}</div>
+                          <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 md:mb-3">{persona.role}</div>
+                          <p className="text-xs md:text-sm text-slate-500 leading-relaxed line-clamp-3">{persona.description}</p>
                         </button>
                       ))}
                     </div>
@@ -199,7 +200,7 @@ export const JurySimulatorPage: React.FC = () => {
                   <button 
                     onClick={handleStart}
                     disabled={!topic}
-                    className="w-full py-5 bg-slate-900 text-white text-lg font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200 hover:shadow-emerald-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                    className="w-full py-4 md:py-5 bg-slate-900 text-white text-lg font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200 hover:shadow-emerald-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
                   >
                     Entrer dans l'arène <ShieldAlert size={20} />
                   </button>
@@ -220,13 +221,13 @@ export const JurySimulatorPage: React.FC = () => {
                         <img 
                         src={selectedPersona.avatar} 
                         alt={selectedPersona.name} 
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-2xl object-cover border-2 border-white shadow-md" 
+                        className="w-10 h-10 md:w-14 md:h-14 rounded-2xl object-cover border-2 border-white shadow-md" 
                         />
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-900 text-lg leading-tight">{selectedPersona.name}</h3>
-                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{selectedPersona.role}</p>
+                        <h3 className="font-bold text-slate-900 text-base md:text-lg leading-tight">{selectedPersona.name}</h3>
+                        <p className="text-[10px] md:text-xs font-medium text-slate-400 uppercase tracking-wider">{selectedPersona.role}</p>
                     </div>
                 </div>
 
@@ -278,7 +279,7 @@ export const JurySimulatorPage: React.FC = () => {
                       )}
 
                       <div className="flex flex-col gap-2">
-                          <div className={`p-5 md:p-6 rounded-3xl text-[15px] md:text-base leading-relaxed shadow-sm relative ${
+                          <div className={`p-4 md:p-6 rounded-3xl text-sm md:text-base leading-relaxed shadow-sm relative ${
                             msg.sender === 'user' 
                                 ? 'bg-emerald-600 text-white rounded-tr-sm' 
                                 : 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm font-serif'

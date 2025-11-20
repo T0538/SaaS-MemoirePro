@@ -16,6 +16,7 @@ export interface DestinationData {
   checklist: string[];
   budget: { item: string; cost: string; icon: any }[];
   deadlines: { month: string; action: string }[];
+  relatedGuides: { title: string; link: string }[];
 }
 
 export const DESTINATIONS: Record<string, DestinationData> = {
@@ -67,6 +68,12 @@ export const DESTINATIONS: Record<string, DestinationData> = {
       { month: "Décembre", action: "Date limite dossiers" },
       { month: "Avril", action: "Réponses des universités" },
       { month: "Juin", action: "Demande de Visa" }
+    ],
+    relatedGuides: [
+      { title: "Comment rédiger sa lettre de motivation Campus France ?", link: "/blog/guide-methodologique" },
+      { title: "Réussir son entretien consulaire (Campus France)", link: "/blog/reussir-soutenance" },
+      { title: "Top 10 des villes étudiantes les moins chères", link: "/blog/themes-memoire-licence-pro" },
+      { title: "Gérer son budget étudiant en Euro", link: "/resources" }
     ]
   },
   africa: {
@@ -116,6 +123,12 @@ export const DESTINATIONS: Record<string, DestinationData> = {
       { month: "Mai", action: "Épreuves écrites" },
       { month: "Juillet", action: "Résultats d'admission" },
       { month: "Septembre", action: "Rentrée académique" }
+    ],
+    relatedGuides: [
+      { title: "Préparer les concours d'ingénieurs (INPHB, EAM)", link: "/resources" },
+      { title: "Obtenir une bourse d'excellence nationale", link: "/resources" },
+      { title: "Les 10 filières d'avenir en Afrique de l'Ouest", link: "/blog/themes-memoire-licence-pro" },
+      { title: "Logement étudiant à Dakar et Abidjan", link: "/resources" }
     ]
   },
   canada: {
@@ -166,6 +179,12 @@ export const DESTINATIONS: Record<string, DestinationData> = {
       { month: "Mars", action: "Demande de CAQ" },
       { month: "Mai", action: "Demande Permis d'études" },
       { month: "Août", action: "Arrivée au Canada" }
+    ],
+    relatedGuides: [
+      { title: "Lettre d'explication pour le permis d'études", link: "/resources" },
+      { title: "Comprendre le système scolaire québécois", link: "/resources" },
+      { title: "Budget : Vivre à Montréal avec 1200$", link: "/resources" },
+      { title: "Trouver un job étudiant au Canada", link: "/resources" }
     ]
   }
 };

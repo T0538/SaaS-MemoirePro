@@ -30,7 +30,8 @@ import {
   CheckCircle,
   Search,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  Check // Added Check icon for date validation
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -73,6 +74,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
   // PLANNING COACH STATE
   const [showDateInput, setShowDateInput] = useState(false);
+  const [tempDeadline, setTempDeadline] = useState(''); // Temporary state for input
   const [stats, setStats] = useState({ wordCount: 0, daysLeft: 0, dailyGoal: 0, progress: 0 });
 
   // LICENCE STATE
@@ -110,11 +112,17 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     if (project.deadline) {
       const today = new Date();
       const deadlineDate = new Date(project.deadline);
-      const diffTime = Math.abs(deadlineDate.getTime() - today.getTime());
+      // Reset hours to compare dates properly
+      today.setHours(0,0,0,0);
+      deadlineDate.setHours(0,0,0,0);
+      
+      const diffTime = deadlineDate.getTime() - today.getTime();
       daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
       
       if (daysLeft > 0) {
         dailyGoal = Math.max(0, Math.ceil((TARGET_WORDS - totalWords) / daysLeft));
+      } else if (daysLeft < 0) {
+        daysLeft = 0; // Avoid negative days display if passed
       }
     }
 
@@ -126,9 +134,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     });
   };
 
-  const handleSetDeadline = (date: string) => {
-    onUpdateProject({ ...project, deadline: date });
-    setShowDateInput(false);
+  const handleSetDeadline = () => {
+    if (tempDeadline) {
+        onUpdateProject({ ...project, deadline: tempDeadline });
+        setShowDateInput(false);
+    }
   };
 
   const incrementGenCount = () => {
@@ -158,6 +168,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       setShowImproveInput(false);
     }
   }, [activeSectionId, activeChapterId]);
+
+  // Helper to close sidebar on mobile when tool is selected
+  const handleToolSelect = () => {
+      if (window.innerWidth < 768) {
+          setSidebarOpen(false);
+      }
+  };
 
   const handleGenerate = async () => {
     if (!activeChapter || !activeSection) return;
@@ -436,13 +453,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-[60] md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-50 absolute md:relative shadow-xl md:shadow-none`}>
+      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[70] absolute md:relative shadow-xl md:shadow-none`}>
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
             <div className="flex items-center gap-2 font-bold">
                 <FileText size={16} className="text-emerald-400"/>
@@ -481,11 +498,20 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
               
               {!project.deadline ? (
                   showDateInput ? (
+                    <div className="flex gap-2">
                       <input 
                           type="date" 
-                          className="w-full px-2 py-1 text-xs border border-slate-300 rounded mb-2"
-                          onChange={(e) => handleSetDeadline(e.target.value)}
+                          className="flex-1 px-2 py-1 text-xs border border-slate-300 rounded"
+                          onChange={(e) => setTempDeadline(e.target.value)}
                       />
+                      <button 
+                        onClick={handleSetDeadline} 
+                        className="bg-emerald-600 text-white p-1 rounded hover:bg-emerald-700"
+                        disabled={!tempDeadline}
+                      >
+                        <Check size={14} />
+                      </button>
+                    </div>
                   ) : (
                       <button 
                           onClick={() => setShowDateInput(true)} 
@@ -526,7 +552,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                <Wand2 size={12} /> Boîte à outils IA
             </h4>
             <div className="space-y-2">
-                 <button onClick={handleExpand} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={() => {handleExpand(); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Maximize2 size={16}/></div>
                      Développer le texte
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
@@ -535,11 +561,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Users size={16}/></div>
                      Simulateur Jury
                  </button>
-                 <button onClick={() => setShowBiblioPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={() => {setShowBiblioPanel(true); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Book size={16}/></div>
                      Bibliographe IA
                  </button>
-                 <button onClick={() => setShowDocPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={() => {setShowDocPanel(true); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Search size={16}/></div>
                      Chat avec Sources
                  </button>
@@ -781,7 +807,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         {/* Top Bar */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-20">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-[80]"> {/* INCREASED Z-INDEX to 80 */}
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -824,7 +850,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         </header>
 
         {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto relative bg-slate-100/50">
+        <div className="flex-1 overflow-y-auto relative bg-slate-100/50 pt-20 md:pt-0"> {/* PADDING TOP ADDED HERE */}
            <div className="max-w-3xl mx-auto py-8 px-4 md:py-12 md:px-12 min-h-full flex flex-col">
               
               {/* Humanizer Bar */}
@@ -884,15 +910,15 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
                  {/* Floating Action Button if empty */}
                  {!editorContent && !isGenerating && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-full px-4">
                        <button 
                           onClick={handleGenerate}
-                          className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 font-bold text-white transition-all duration-200 bg-emerald-900 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-900 hover:bg-emerald-600 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                          className="group relative inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 font-bold text-white transition-all duration-200 bg-emerald-900 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-900 hover:bg-emerald-600 shadow-xl hover:shadow-2xl hover:-translate-y-1 w-full md:w-auto"
                        >
                           <Wand2 size={20} className="animate-pulse" />
                           Générer cette section
                        </button>
-                       <p className="mt-4 text-sm text-slate-400">L'IA va rédiger environ 400 mots basés sur votre plan.</p>
+                       <p className="mt-4 text-xs md:text-sm text-slate-400">L'IA va rédiger environ 400 mots basés sur votre plan.</p>
                     </div>
                  )}
               </div>

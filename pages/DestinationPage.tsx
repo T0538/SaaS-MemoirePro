@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { DESTINATIONS } from '../data/destinations';
-import { ArrowLeft, CheckCircle2, GraduationCap, Info, Calendar, Calculator, FileCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, GraduationCap, Info, Calendar, Calculator, FileCheck, Lightbulb, ArrowRight } from 'lucide-react';
 
 export const DestinationPage: React.FC = () => {
   const { region } = useParams<{ region: string }>();
@@ -170,20 +170,48 @@ export const DestinationPage: React.FC = () => {
 
          </div>
 
-         {/* Sidebar Tips */}
+         {/* Sidebar */}
          <div className="lg:col-span-4 space-y-8">
-             <div className={`bg-white p-8 rounded-3xl shadow-xl shadow-slate-200 border-t-4 ${theme.border} border-x border-b border-slate-100 sticky top-24`}>
-                 <h3 className="text-2xl font-serif font-bold mb-8 flex items-center gap-3 text-slate-900">
-                     <Info size={28} className={theme.text} />
-                     Conseils Pratiques
+             
+             {/* CONSEILS PRATIQUES WIDGET (NEW DESIGN) */}
+             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 sticky top-24">
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <Lightbulb size={16} className={theme.text} />
+                    Conseils Pratiques
+                 </h4>
+                 
+                 <ul className="space-y-6 mb-8">
+                    {data.relatedGuides.map((guide, idx) => (
+                        <li key={idx}>
+                            <Link to={guide.link} className="group flex items-start gap-3 hover:translate-x-1 transition-transform">
+                                <span className={`w-2 h-2 mt-2 rounded-full shrink-0 ${theme.bg}`}></span>
+                                <span className="text-slate-600 font-medium text-sm group-hover:text-slate-900 leading-relaxed">
+                                    {guide.title}
+                                </span>
+                            </Link>
+                        </li>
+                    ))}
+                 </ul>
+
+                 <Link to="/resources" className={`inline-flex items-center gap-2 text-sm font-bold ${theme.text} hover:underline group`}>
+                     Voir tous les guides d'orientation 
+                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                 </Link>
+             </div>
+
+             {/* Info Clés Widget */}
+             <div className={`bg-slate-50 p-8 rounded-3xl border border-slate-100`}>
+                 <h3 className="text-xl font-serif font-bold mb-6 flex items-center gap-3 text-slate-900">
+                     <Info size={24} className="text-slate-400" />
+                     Le saviez-vous ?
                  </h3>
-                 <div className="space-y-8">
+                 <div className="space-y-6">
                      {data.tips.map((tip, idx) => (
                          <div key={idx} className="flex gap-4">
                              <div className="mt-1 shrink-0">
-                                 <CheckCircle2 size={20} className={theme.text} />
+                                 <CheckCircle2 size={18} className="text-slate-400" />
                              </div>
-                             <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                             <p className="text-slate-600 text-sm leading-relaxed">
                                  {tip}
                              </p>
                          </div>
