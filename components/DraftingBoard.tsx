@@ -453,13 +453,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+          className="fixed inset-0 bg-black/50 z-[90] md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[70] absolute md:relative shadow-xl md:shadow-none`}>
+      <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] absolute md:relative shadow-xl md:shadow-none`}>
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
             <div className="flex items-center gap-2 font-bold">
                 <FileText size={16} className="text-emerald-400"/>
@@ -638,7 +638,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
       {/* BIBLIOGRAPHY PANEL OVERLAY */}
       {showBiblioPanel && (
-         <div className="absolute inset-0 z-[60] flex justify-end">
+         <div className="absolute inset-0 z-[110] flex justify-end">
              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowBiblioPanel(false)}></div>
              <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
                  <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -722,7 +722,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
       {/* DOC CHAT PANEL OVERLAY */}
       {showDocPanel && (
-         <div className="absolute inset-0 z-[60] flex justify-end">
+         <div className="absolute inset-0 z-[110] flex justify-end">
              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowDocPanel(false)}></div>
              <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
                  <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -807,7 +807,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         {/* Top Bar */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-[80]"> {/* INCREASED Z-INDEX to 80 */}
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-[30]">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -850,11 +850,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         </header>
 
         {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto relative bg-slate-100/50 pt-20 md:pt-0"> {/* PADDING TOP ADDED HERE */}
+        <div className="flex-1 overflow-y-auto relative bg-slate-100/50 pt-20 md:pt-0">
            <div className="max-w-3xl mx-auto py-8 px-4 md:py-12 md:px-12 min-h-full flex flex-col">
               
               {/* Humanizer Bar */}
-              <div className="mb-6 bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-2 sticky top-0 z-10">
+              <div className="mb-6 bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-2 sticky top-0 z-[20]">
                  <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
                     <Sparkles size={16} />
                  </div>
