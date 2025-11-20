@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Domain, Chapter, Section, JuryQuestion, JuryPersona, JuryMessage, Reference } from '../types';
 
@@ -23,6 +22,21 @@ DIRECTIVES DE STYLE ET D'HUMANISATION (CRITIQUE) :
 3.  **Vocabulaire Spécifique** : Utilise le jargon technique du domaine (${Domain.QHSE} => ISO 45001, AMDEC, Document Unique, etc.).
 `;
 
+// --- SYSTEME DE RETRY AUTOMATIQUE ---
+const runWithRetry = async <T>(operation: () => Promise<T>, retries = 3, delay = 2000): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error: any) {
+    // 503 = Service Unavailable (Overloaded), 429 = Too Many Requests
+    if (retries > 0 && (error?.status === 503 || error?.status === 429 || error?.message?.includes('overloaded'))) {
+      console.warn(`Gemini API Busy/RateLimited. Retrying in ${delay}ms... (${retries} attempts left)`);
+      await new Promise(r => setTimeout(r, delay));
+      return runWithRetry(operation, retries - 1, delay * 2); // Exponential backoff (attend plus longtemps à chaque fois)
+    }
+    throw error;
+  }
+};
+
 export const generateThesisOutline = async (
   topic: string, 
   domain: Domain, 
@@ -37,8 +51,8 @@ export const generateThesisOutline = async (
   `;
 
   try {
-    // UTILISATION DE GEMINI FLASH (Gratuit et Rapide) pour éviter l'erreur 429
-    const response = await ai.models.generateContent({
+    // Utilisation de runWithRetry pour sécuriser l'appel
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
@@ -58,7 +72,7 @@ export const generateThesisOutline = async (
           }
         }
       }
-    });
+    }));
 
     const rawData = JSON.parse(response.text || "[]");
 
@@ -75,7 +89,7 @@ export const generateThesisOutline = async (
 
   } catch (error) {
     console.error("Error generating outline:", error);
-    throw new Error("Impossible de générer le plan. Vérifiez votre clé API ou vos quotas.");
+    throw new Error("Impossible de générer le plan. Le service IA est momentanément surchargé, veuillez réessayer.");
   }
 };
 
@@ -86,8 +100,6 @@ export const parseImportedOutline = (text: string): Chapter[] => {
 
   lines.forEach(line => {
     const trimmed = line.trim();
-    // Detect Chapter: Starts with "1.", "I.", "Chapitre", "Module", "Partie"
-    // OR is ALL CAPS and length > 4 (heuristic for titles)
     const isChapter = /^(chapitre|partie|module|\d+\.|[IVX]+\.)/i.test(trimmed) || 
                       (trimmed === trimmed.toUpperCase() && /[a-zA-Z]/.test(trimmed) && trimmed.length > 4);
 
@@ -99,7 +111,6 @@ export const parseImportedOutline = (text: string): Chapter[] => {
       };
       chapters.push(currentChapter);
     } else {
-      // If no chapter exists yet, create a default one (Intro)
       if (!currentChapter) {
          currentChapter = {
              id: generateId(),
@@ -109,7 +120,6 @@ export const parseImportedOutline = (text: string): Chapter[] => {
          chapters.push(currentChapter);
       }
       
-      // Clean up section bullets
       const cleanTitle = trimmed.replace(/^[-*•>]\s*/, '').trim();
       if(cleanTitle) {
           currentChapter.sections.push({
@@ -122,7 +132,6 @@ export const parseImportedOutline = (text: string): Chapter[] => {
     }
   });
   
-  // Ensure chapters without sections don't break UI
   return chapters.map(c => {
       if (c.sections.length === 0) {
           c.sections.push({
@@ -157,31 +166,31 @@ export const generateSectionContent = async (
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Utilisation du modèle Flash compatible Free Tier
+    // Retry automatique ici
+    const response = await runWithRetry(() => ai.models.generateContent({
+      model: 'gemini-2.5-flash',
       contents: prompt,
-    });
+    }));
 
     return response.text || "";
   } catch (error) {
     console.error("Error generating content:", error);
-    throw new Error("Erreur lors de la rédaction.");
+    throw new Error("Le service IA est surchargé. Veuillez réessayer dans quelques secondes.");
   }
 };
 
 export const improveText = async (text: string, instruction: string): Promise<string> => {
   try {
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Agis comme un éditeur expert. Texte original : "${text}". Instruction : ${instruction}. ${HUMANIZER_INSTRUCTIONS}`
-    });
+    }));
     return response.text || text;
   } catch (e) {
     return text;
   }
 };
 
-// FEATURE PREMIUM : Magic Expander
 export const expandContent = async (text: string, domain: string): Promise<string> => {
   try {
     const prompt = `
@@ -197,10 +206,10 @@ export const expandContent = async (text: string, domain: string): Promise<strin
       4. Utilise un style impersonnel et soutenu.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt
-    });
+    }));
     return response.text || text;
   } catch (e) {
     console.error("Expand Error", e);
@@ -208,7 +217,6 @@ export const expandContent = async (text: string, domain: string): Promise<strin
   }
 };
 
-// FEATURE PREMIUM : Jury Simulator (Simple)
 export const generateJuryQuestions = async (text: string, domain: string): Promise<JuryQuestion[]> => {
   try {
     const prompt = `
@@ -225,11 +233,11 @@ export const generateJuryQuestions = async (text: string, domain: string): Promi
       ]
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: { responseMimeType: "application/json" }
-    });
+    }));
 
     const data = JSON.parse(response.text || "[]");
     return data.map((q: any) => ({
@@ -244,7 +252,6 @@ export const generateJuryQuestions = async (text: string, domain: string): Promi
   }
 };
 
-// FEATURE PREMIUM : Jury Simulator (Immersive Chat)
 export const interactWithJury = async (
     history: JuryMessage[], 
     persona: JuryPersona, 
@@ -287,11 +294,11 @@ export const interactWithJury = async (
     `;
   
     try {
-      const response = await ai.models.generateContent({
+      const response = await runWithRetry(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: { responseMimeType: "application/json" }
-      });
+      }));
   
       const data = JSON.parse(response.text || "{}");
       return {
@@ -302,14 +309,13 @@ export const interactWithJury = async (
     } catch (e) {
       console.error("Jury Chat Error", e);
       return {
-        content: "Je n'ai pas bien saisi, pouvez-vous reformuler ?",
+        content: "Je n'ai pas bien saisi, pouvez-vous reformuler ? (Serveur surchargé)",
         score: 50,
         critique: "Erreur technique."
       };
     }
 };
 
-// FEATURE: BIBLIOGRAPHE IA (Suggestions)
 export const suggestReferences = async (topic: string, domain: string): Promise<Reference[]> => {
   try {
     const prompt = `
@@ -325,11 +331,11 @@ export const suggestReferences = async (topic: string, domain: string): Promise<
       ]
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: { responseMimeType: "application/json" }
-    });
+    }));
 
     const data = JSON.parse(response.text || "[]");
     return data.map((ref: any) => ({
@@ -346,7 +352,6 @@ export const suggestReferences = async (topic: string, domain: string): Promise<
   }
 }
 
-// FEATURE: CHAT SOURCES (Analyze Documents)
 export const askDocumentContext = async (query: string, documentsContext: string): Promise<string> => {
   try {
     const prompt = `
@@ -363,10 +368,10 @@ export const askDocumentContext = async (query: string, documentsContext: string
       Cite les passages clés si pertinent.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt
-    });
+    }));
 
     return response.text || "Je n'ai pas trouvé de réponse dans vos documents.";
   } catch (e) {
@@ -375,7 +380,6 @@ export const askDocumentContext = async (query: string, documentsContext: string
   }
 }
 
-// FEATURE: ORIENTATION POST-BAC AI
 export const analyzeOrientationProfile = async (
   profileData: { 
     bacSeries: string; 
@@ -390,7 +394,7 @@ export const analyzeOrientationProfile = async (
   recommendations: Array<{
     title: string;
     description: string;
-    schools: string; // Exemples d'écoles (Afrique/Europe)
+    schools: string; 
     jobs: string;
   }>;
 }> => {
@@ -428,11 +432,11 @@ export const analyzeOrientationProfile = async (
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await runWithRetry(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: { responseMimeType: "application/json" }
-    });
+    }));
 
     return JSON.parse(response.text || "{}");
   } catch (e) {
