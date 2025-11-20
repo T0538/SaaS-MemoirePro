@@ -345,3 +345,98 @@ export const suggestReferences = async (topic: string, domain: string): Promise<
     return [];
   }
 }
+
+// FEATURE: CHAT SOURCES (Analyze Documents)
+export const askDocumentContext = async (query: string, documentsContext: string): Promise<string> => {
+  try {
+    const prompt = `
+      Tu es un assistant de recherche intelligent.
+      Voici le contenu des documents sources de l'étudiant :
+      """
+      ${documentsContext.substring(0, 30000)}
+      """
+
+      Question de l'étudiant : "${query}"
+
+      Réponds à la question en te basant UNIQUEMENT sur les documents fournis ci-dessus.
+      Si la réponse n'est pas dans les documents, dis-le clairement.
+      Cite les passages clés si pertinent.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+
+    return response.text || "Je n'ai pas trouvé de réponse dans vos documents.";
+  } catch (e) {
+    console.error("Doc Chat Error", e);
+    return "Erreur lors de l'analyse des documents.";
+  }
+}
+
+// FEATURE: ORIENTATION POST-BAC AI
+export const analyzeOrientationProfile = async (
+  profileData: { 
+    bacSeries: string; 
+    favorites: string[]; 
+    hobbies: string; 
+    dream: string;
+    location: string; 
+  }
+): Promise<{
+  archetype: string;
+  analysis: string;
+  recommendations: Array<{
+    title: string;
+    description: string;
+    schools: string; // Exemples d'écoles (Afrique/Europe)
+    jobs: string;
+  }>;
+}> => {
+
+  const prompt = `
+    Agis comme un conseiller d'orientation expert et bienveillant, spécialisé dans les systèmes éducatifs Francophones (France, Afrique de l'Ouest/Centrale, Maghreb).
+    
+    Analyse le profil de cet élève :
+    - Série du Bac / Spécialités : ${profileData.bacSeries}
+    - Matières préférées : ${profileData.favorites.join(', ')}
+    - Passions / Hobbies : ${profileData.hobbies}
+    - Rêve / Ambition : ${profileData.dream}
+    - Zone souhaitée : ${profileData.location}
+
+    Ta mission :
+    1. Définis son "Archétype" (ex: "Le Créatif Pragmatique", "L'Ingénieur Humaniste").
+    2. Rédige une courte analyse psychologique de son profil.
+    3. Propose 3 filières d'études très concrètes et adaptées à sa zone géographique.
+       - Si zone = Afrique : Cite des écoles prestigieuses locales (ex: INPHB, UCAD, ENSEA...) ET des options internationales.
+       - Si zone = Europe : Cite les formations Parcoursup (BUT, Licence, CPGE).
+
+    Réponds UNIQUEMENT en JSON selon ce schéma :
+    {
+      "archetype": "Titre de l'archétype",
+      "analysis": "Texte d'analyse...",
+      "recommendations": [
+        {
+          "title": "Nom de la filière (ex: Licence Info)",
+          "description": "Pourquoi c'est fait pour lui...",
+          "schools": "Exemples d'écoles précises...",
+          "jobs": "Débouchés métiers..."
+        }
+      ]
+    }
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+
+    return JSON.parse(response.text || "{}");
+  } catch (e) {
+    console.error("Orientation Error", e);
+    throw new Error("Impossible d'analyser le profil.");
+  }
+};

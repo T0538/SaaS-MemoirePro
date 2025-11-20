@@ -164,14 +164,14 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
                  
                  {showExportMenu && (
                      <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-fade-in">
-                         <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-50">
+                         <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-50">
                              <div className="flex items-center gap-3">
                                 <FileText size={16} className="text-blue-600" />
                                 <span>Word (.doc)</span>
                              </div>
                              {!isPremium && <Lock size={12} className="text-slate-400" />}
                          </button>
-                         <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+                         <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
                              <Printer size={16} className="text-red-600" />
                              <span>PDF (Impression)</span>
                          </button>
@@ -185,7 +185,7 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
 
             <button 
             onClick={onRegenerate}
-            className="text-slate-600 hover:text-indigo-600 flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 transition"
+            className="text-slate-600 hover:text-emerald-600 flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 transition"
             >
             <RefreshCcw size={16} />
             Régénérer
@@ -213,7 +213,7 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
                     type="text"
                     value={section.title}
                     onChange={(e) => handleSectionChange(cIdx, sIdx, e.target.value)}
-                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
                   />
                   <button
                     onClick={() => removeSection(cIdx, sIdx)}
@@ -227,7 +227,7 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
               
               <button
                 onClick={() => addSection(cIdx)}
-                className="mt-2 flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-50 transition w-fit"
+                className="mt-2 flex items-center gap-2 text-xs font-bold text-emerald-600 hover:text-emerald-700 px-4 py-2 rounded-lg hover:bg-emerald-50 transition w-fit"
               >
                 <Plus size={14} />
                 Ajouter une section
@@ -240,7 +240,7 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
       <div className="flex justify-end">
         <button
           onClick={() => onConfirm(editableChapters)}
-          className="bg-slate-900 hover:bg-indigo-600 text-white text-lg font-bold py-4 px-10 rounded-xl transition-all shadow-xl shadow-slate-200 hover:shadow-indigo-200 flex items-center gap-3 transform hover:-translate-y-1"
+          className="bg-slate-900 hover:bg-emerald-600 text-white text-lg font-bold py-4 px-10 rounded-xl transition-all shadow-xl shadow-slate-200 hover:shadow-emerald-200 flex items-center gap-3 transform hover:-translate-y-1"
         >
           <CheckCircle size={24} />
           Valider le plan et commencer

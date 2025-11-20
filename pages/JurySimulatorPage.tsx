@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { JuryPersona, JuryMessage, Domain } from '../types';
 import { interactWithJury } from '../services/geminiService';
-import { User, MessageSquare, Send, ShieldAlert, Mic, Award, ArrowLeft, BarChart3 } from 'lucide-react';
+import { User, MessageSquare, Send, ShieldAlert, Mic, Award, ArrowLeft, BarChart3, CheckCircle2, RefreshCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // PERSONAS PRÉDÉFINIS AVEC PHOTOS RÉALISTES
@@ -49,7 +48,7 @@ export const JurySimulatorPage: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleStart = async () => {
     if (!topic) return;
@@ -62,11 +61,11 @@ export const JurySimulatorPage: React.FC = () => {
         {
           id: 'init',
           sender: 'jury',
-          content: `Bonjour. Nous sommes réunis pour votre soutenance sur "${topic}". Je suis ${selectedPersona.name}, ${selectedPersona.role}. Vous pouvez commencer par vous présenter brièvement.`
+          content: `Bonjour. Ravie de vous entendre aujourd'hui sur le sujet : "${topic}". Je suis ${selectedPersona.name}. Présentez-vous et exposez votre problématique, je vous écoute.`
         }
       ]);
       setIsLoading(false);
-    }, 1000);
+    }, 1500);
   };
 
   const handleSendMessage = async () => {
@@ -104,137 +103,205 @@ export const JurySimulatorPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] bg-slate-50 flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-[#F8FAFC] flex flex-col overflow-hidden font-sans">
       
-      {/* Header Simple */}
-      <header className="bg-white border-b border-slate-200 py-3 px-4 flex items-center justify-between shrink-0">
-        <Link to="/app" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium text-sm">
-          <ArrowLeft size={18} />
-          <span className="hidden md:inline">Retour à l'éditeur</span>
-        </Link>
-        <div className="flex items-center gap-2 font-bold text-slate-900">
-          <div className="bg-amber-100 text-amber-600 p-1.5 rounded-lg">
-             <Award size={18} />
+      {/* Header Minimaliste */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 py-4 px-6 flex items-center justify-between shrink-0 z-20">
+        <Link to="/app" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium text-sm transition-colors">
+          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition">
+             <ArrowLeft size={16} />
           </div>
-          <span className="text-sm md:text-base">Grand Oral Simulator</span>
+          <span className="hidden md:inline">Quitter la simulation</span>
+        </Link>
+        
+        <div className="flex flex-col items-center">
+            <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Entraînement</span>
+            <h1 className="font-serif font-bold text-slate-900">Grand Oral Simulator</h1>
         </div>
-        <div className="w-10 md:w-24"></div> {/* Spacer */}
+
+        <div className="w-10 md:w-24 flex justify-end">
+             {step === 'simulation' && (
+                 <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-slate-600" title="Recommencer">
+                     <RefreshCcw size={18} />
+                 </button>
+             )}
+        </div>
       </header>
 
-      <main className="flex-1 overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col relative">
         
         {step === 'setup' ? (
-          <div className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
-            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-10 max-w-2xl w-full animate-fade-in">
-              <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 mb-2 text-center">Configurez votre Jury</h1>
-              <p className="text-slate-500 text-center mb-8 text-sm md:text-base">Choisissez qui va vous interroger aujourd'hui.</p>
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center min-h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50 via-slate-50 to-slate-100">
+            <div className="w-full max-w-4xl mx-auto animate-fade-in">
+              
+              <div className="text-center mb-12">
+                  <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Configurez votre Jury</h2>
+                  <p className="text-slate-600 text-lg max-w-2xl mx-auto">L'IA va incarner un profil spécifique pour tester votre repartie. Choisissez votre opposant.</p>
+              </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sujet de soutenance</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="Ex: L'impact de l'IA sur le management..."
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                  />
-                </div>
+              <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Choisissez votre juré</label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {JURY_PERSONAS.map(persona => (
-                      <button
-                        key={persona.id}
-                        onClick={() => setSelectedPersona(persona)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all group relative overflow-hidden ${selectedPersona.id === persona.id ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-100 hover:border-slate-300'}`}
-                      >
-                        <div className="mb-3 relative flex md:block justify-center">
-                          <img 
-                            src={persona.avatar} 
-                            alt={persona.name} 
-                            className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
-                          />
-                          <div className="absolute -bottom-1 -right-1 md:right-auto md:left-10 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm shadow-sm border border-slate-100">
-                            {persona.tone === 'Strict' ? '🎓' : persona.tone === 'Technique' ? '💼' : '🤔'}
-                          </div>
-                        </div>
-                        <div className="font-bold text-slate-900 text-sm group-hover:text-amber-700 transition-colors text-center md:text-left">{persona.name}</div>
-                        <div className="text-xs text-slate-500 mb-2 font-medium text-center md:text-left">{persona.role}</div>
-                        <p className="text-[10px] text-slate-400 leading-tight line-clamp-3 text-center md:text-left hidden md:block">{persona.description}</p>
-                      </button>
-                    ))}
+                <div className="space-y-10">
+                  {/* Sujet */}
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">1</span>
+                        Quel est votre sujet de mémoire ?
+                    </label>
+                    <input 
+                      type="text" 
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-lg shadow-inner placeholder-slate-400 transition-all"
+                      placeholder="Ex: L'impact de l'IA sur le management..."
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                    />
                   </div>
-                </div>
 
-                <button 
-                  onClick={handleStart}
-                  disabled={!topic}
-                  className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-amber-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  Entrer dans l'arène <ShieldAlert size={18} />
-                </button>
+                  {/* Personas */}
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">2</span>
+                        Qui vous interroge ?
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {JURY_PERSONAS.map(persona => (
+                        <button
+                          key={persona.id}
+                          onClick={() => setSelectedPersona(persona)}
+                          className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group hover:shadow-lg ${selectedPersona.id === persona.id ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-slate-100 bg-white hover:border-emerald-200'}`}
+                        >
+                          {selectedPersona.id === persona.id && (
+                              <div className="absolute top-4 right-4 text-emerald-600">
+                                  <CheckCircle2 size={24} fill="#ecfdf5" />
+                              </div>
+                          )}
+                          
+                          <div className="mb-4 relative inline-block">
+                            <img 
+                              src={persona.avatar} 
+                              alt={persona.name} 
+                              className={`w-20 h-20 rounded-2xl object-cover shadow-md transition-transform duration-500 ${selectedPersona.id === persona.id ? 'scale-105 ring-4 ring-white' : 'grayscale-[30%] group-hover:grayscale-0'}`}
+                            />
+                            <div className="absolute -bottom-2 -right-2 bg-white px-2 py-1 rounded-md text-xs font-bold shadow-sm border border-slate-100">
+                                {persona.tone}
+                            </div>
+                          </div>
+                          
+                          <div className="font-bold text-slate-900 text-lg mb-1 group-hover:text-emerald-700 transition-colors">{persona.name}</div>
+                          <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">{persona.role}</div>
+                          <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">{persona.description}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleStart}
+                    disabled={!topic}
+                    className="w-full py-5 bg-slate-900 text-white text-lg font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200 hover:shadow-emerald-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                  >
+                    Entrer dans l'arène <ShieldAlert size={20} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col md:flex-row gap-0 md:gap-6 p-0 md:p-6 h-full overflow-hidden">
+          <div className="flex-1 flex h-full max-w-6xl mx-auto w-full md:px-6 md:pb-6">
             
-            {/* Chat Area */}
-            <div className="flex-1 bg-white md:rounded-2xl shadow-none md:shadow-lg border-t md:border border-slate-200 flex flex-col overflow-hidden h-full">
+            {/* Chat Container */}
+            <div className="flex-1 flex flex-col bg-white md:rounded-3xl shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100 relative">
               
-              {/* Mobile Compact Header Score */}
-              <div className="md:hidden bg-slate-900 text-white px-4 py-2 flex items-center justify-between text-xs font-medium">
-                 <span>Jury: {selectedPersona.name}</span>
-                 <span className={`${currentScore < 50 ? 'text-red-400' : 'text-emerald-400'}`}>Score: {currentScore}%</span>
-              </div>
+              {/* Top Bar Simulation */}
+              <div className="p-4 md:p-6 border-b border-slate-100 bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <img 
+                        src={selectedPersona.avatar} 
+                        alt={selectedPersona.name} 
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-2xl object-cover border-2 border-white shadow-md" 
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-900 text-lg leading-tight">{selectedPersona.name}</h3>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{selectedPersona.role}</p>
+                    </div>
+                </div>
 
-              {/* Top Bar Persona (Desktop) */}
-              <div className="hidden md:flex p-4 border-b border-slate-100 bg-slate-50 items-center gap-4">
-                <img 
-                  src={selectedPersona.avatar} 
-                  alt={selectedPersona.name} 
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" 
-                />
-                <div>
-                  <h3 className="font-bold text-slate-900">{selectedPersona.name}</h3>
-                  <p className="text-xs text-slate-500">{selectedPersona.role} • <span className="text-amber-600">{selectedPersona.tone}</span></p>
+                {/* Score Gauge (Desktop) */}
+                <div className="hidden md:flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                    <div className="text-right">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Crédibilité</p>
+                        <p className={`font-bold text-lg ${currentScore > 70 ? 'text-emerald-600' : currentScore > 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                            {currentScore}/100
+                        </p>
+                    </div>
+                    <div className="w-12 h-12 relative">
+                         <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="20" stroke="#E2E8F0" strokeWidth="4" fill="none" />
+                            <circle 
+                              cx="24" cy="24" r="20" 
+                              stroke={currentScore > 70 ? '#10B981' : currentScore > 40 ? '#F59E0B' : '#EF4444'} 
+                              strokeWidth="4" 
+                              fill="none" 
+                              strokeDasharray={125} 
+                              strokeDashoffset={125 - (125 * currentScore) / 100}
+                              className="transition-all duration-1000 ease-out"
+                            />
+                         </svg>
+                    </div>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-[#FDFDFD]">
+              {/* Score Gauge (Mobile) */}
+              <div className="md:hidden absolute top-20 right-4 bg-white/90 backdrop-blur shadow-sm border border-slate-100 px-3 py-1 rounded-full z-10">
+                  <span className={`text-xs font-bold ${currentScore > 70 ? 'text-emerald-600' : 'text-amber-500'}`}>
+                      Score: {currentScore}
+                  </span>
+              </div>
+
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 bg-[#FDFDFD]">
                 {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[90%] md:max-w-[85%] p-3 md:p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex gap-3 ${
-                      msg.sender === 'user' 
-                        ? 'bg-slate-900 text-white rounded-br-none' 
-                        : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none'
-                    }`}>
+                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                    <div className={`max-w-[90%] md:max-w-[80%] flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                      
+                      {/* Avatar (Jury Only) */}
                       {msg.sender === 'jury' && (
                          <img 
                            src={selectedPersona.avatar} 
-                           className="w-8 h-8 rounded-full object-cover border border-slate-100 hidden sm:block" 
+                           className="w-10 h-10 rounded-xl object-cover border border-slate-100 shadow-sm mt-1 hidden sm:block" 
                            alt="Jury"
                          />
                       )}
-                      <div>
-                        {msg.content}
-                        {msg.critique && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 italic flex items-start gap-2">
-                             <MessageSquare size={12} className="mt-0.5" />
-                             Feedback: "{msg.critique}"
+
+                      <div className="flex flex-col gap-2">
+                          <div className={`p-5 md:p-6 rounded-3xl text-[15px] md:text-base leading-relaxed shadow-sm relative ${
+                            msg.sender === 'user' 
+                                ? 'bg-emerald-600 text-white rounded-tr-sm' 
+                                : 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm font-serif'
+                            }`}>
+                            {msg.content}
                           </div>
-                        )}
+
+                          {/* Feedback Collapsible */}
+                          {msg.critique && (
+                            <div className="self-start ml-2 bg-amber-50 border border-amber-100 text-amber-800 text-xs px-3 py-2 rounded-lg flex items-start gap-2 max-w-md opacity-80 hover:opacity-100 transition-opacity">
+                                <MessageSquare size={14} className="mt-0.5 shrink-0" />
+                                <span><strong className="uppercase text-[10px] tracking-wide block text-amber-600/70 mb-0.5">Feedback Coach</strong> {msg.critique}</span>
+                            </div>
+                          )}
                       </div>
+
                     </div>
                   </div>
                 ))}
+                
                 {isLoading && (
-                   <div className="flex justify-start">
-                     <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none flex items-center gap-2">
-                        <img src={selectedPersona.avatar} className="w-6 h-6 rounded-full object-cover" alt="Thinking" />
+                   <div className="flex justify-start pl-14">
+                     <div className="bg-white border border-slate-100 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-sm w-fit">
                         <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
                         <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                         <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
@@ -244,78 +311,34 @@ export const JurySimulatorPage: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Area */}
-              <div className="p-3 md:p-4 bg-white border-t border-slate-100 flex gap-3 shrink-0">
-                <input 
-                  type="text"
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm md:text-base"
-                  placeholder="Votre réponse..."
-                  value={currentInput}
-                  onChange={(e) => setCurrentInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  disabled={isLoading}
-                  autoFocus
-                />
-                <button 
-                  onClick={handleSendMessage}
-                  disabled={isLoading || !currentInput.trim()}
-                  className="p-3 bg-slate-900 text-white rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50 shrink-0"
-                >
-                  <Send size={20} />
-                </button>
+              {/* Input Area Floating */}
+              <div className="p-4 md:p-6 bg-gradient-to-t from-white via-white to-transparent sticky bottom-0">
+                <div className="relative max-w-3xl mx-auto bg-white p-2 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 flex items-center gap-2">
+                    <div className="p-2 text-slate-400">
+                        <Mic size={20} className="hover:text-emerald-600 cursor-pointer transition-colors" />
+                    </div>
+                    <input 
+                    type="text"
+                    className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 px-2 py-2"
+                    placeholder="Défendez votre point de vue..."
+                    value={currentInput}
+                    onChange={(e) => setCurrentInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                    disabled={isLoading}
+                    autoFocus
+                    />
+                    <button 
+                    onClick={handleSendMessage}
+                    disabled={isLoading || !currentInput.trim()}
+                    className="p-3 bg-slate-900 text-white rounded-xl hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:scale-95 transform active:scale-95 shadow-lg"
+                    >
+                    <Send size={18} />
+                    </button>
+                </div>
+                <p className="text-center text-[10px] text-slate-400 mt-3">
+                    Conseil : Soyez concis et structuré. Le jury évalue votre clarté.
+                </p>
               </div>
-            </div>
-
-            {/* Sidebar Stats (Desktop Only) */}
-            <div className="hidden md:flex w-72 flex-col gap-4">
-               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <BarChart3 size={14} />
-                    Score de Conviction
-                  </h3>
-                  
-                  <div className="relative w-32 h-32 mx-auto mb-4">
-                     <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="64" cy="64" r="60" stroke="#F1F5F9" strokeWidth="8" fill="none" />
-                        <circle 
-                          cx="64" cy="64" r="60" 
-                          stroke={currentScore > 70 ? '#10B981' : currentScore > 40 ? '#F59E0B' : '#EF4444'} 
-                          strokeWidth="8" 
-                          fill="none" 
-                          strokeDasharray={377} 
-                          strokeDashoffset={377 - (377 * currentScore) / 100}
-                          className="transition-all duration-1000 ease-out"
-                        />
-                     </svg>
-                     <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-bold text-slate-900">{currentScore}%</span>
-                     </div>
-                  </div>
-                  <p className="text-center text-xs text-slate-500">
-                    {currentScore > 70 ? "Le jury est convaincu." : currentScore > 40 ? "Le jury est sceptique." : "Attention, vous perdez le jury."}
-                  </p>
-               </div>
-
-               <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg flex-1 relative overflow-hidden min-h-[200px]">
-                  <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
-                    <Award size={100} />
-                  </div>
-                  <h3 className="font-serif font-bold text-lg mb-4">Conseils Pro</h3>
-                  <ul className="space-y-4 text-sm text-indigo-200">
-                    <li className="flex gap-2">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div>
-                      Faites des phrases courtes.
-                    </li>
-                    <li className="flex gap-2">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div>
-                      Ne lisez pas vos notes.
-                    </li>
-                    <li className="flex gap-2">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div>
-                      Avouez si vous ne savez pas, plutôt que d'inventer.
-                    </li>
-                  </ul>
-               </div>
             </div>
 
           </div>

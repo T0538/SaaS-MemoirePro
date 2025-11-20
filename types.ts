@@ -32,12 +32,20 @@ export interface Reference {
   citation: string; // Format APA complet
 }
 
+export interface SourceDoc {
+  id: string;
+  title: string;
+  content: string; // Texte brut extrait ou collé
+  date: Date;
+}
+
 export interface ThesisProject {
   id: string;
   title: string;
   domain: Domain;
   context: string; // Brief description or problematic
   chapters: Chapter[];
+  deadline?: string; // Date ISO string
   createdAt: Date;
   updatedAt: Date;
 }

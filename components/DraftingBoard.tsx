@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ThesisProject, Section, JuryQuestion, Reference } from '../types';
-import { generateSectionContent, improveText, expandContent, generateJuryQuestions, suggestReferences } from '../services/geminiService';
+import { ThesisProject, Section, JuryQuestion, Reference, SourceDoc } from '../types';
+import { generateSectionContent, improveText, expandContent, generateJuryQuestions, suggestReferences, askDocumentContext } from '../services/geminiService';
 import { 
   Bot, 
   AlertCircle, 
@@ -11,6 +11,7 @@ import {
   Wand2,
   FileText,
   ChevronLeft,
+  ChevronRight,
   Printer,
   ChevronUp,
   Lock,
@@ -21,7 +22,15 @@ import {
   HelpCircle,
   Book,
   Copy,
-  Plus
+  Plus,
+  Calendar,
+  TrendingUp,
+  Target,
+  Sparkles,
+  CheckCircle,
+  Search,
+  MessageSquare,
+  ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,6 +62,19 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [suggestedRefs, setSuggestedRefs] = useState<Reference[]>([]);
   const [isBiblioLoading, setIsBiblioLoading] = useState(false);
 
+  // DOC CHAT STATE
+  const [showDocPanel, setShowDocPanel] = useState(false);
+  const [sourceDocs, setSourceDocs] = useState<SourceDoc[]>([]);
+  const [newDocContent, setNewDocContent] = useState('');
+  const [newDocTitle, setNewDocTitle] = useState('');
+  const [docQuery, setDocQuery] = useState('');
+  const [docChatHistory, setDocChatHistory] = useState<{sender: 'user'|'ai', text: string}[]>([]);
+  const [isDocLoading, setIsDocLoading] = useState(false);
+
+  // PLANNING COACH STATE
+  const [showDateInput, setShowDateInput] = useState(false);
+  const [stats, setStats] = useState({ wordCount: 0, daysLeft: 0, dailyGoal: 0, progress: 0 });
+
   // LICENCE STATE
   const [isPremium, setIsPremium] = useState(false);
   const [generationCount, setGenerationCount] = useState(0);
@@ -65,6 +87,49 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     const count = parseInt(localStorage.getItem('memoirepro_gen_count') || '0');
     setGenerationCount(count);
   }, []);
+
+  // CALCUL DU PLANNING RETROACTIF
+  useEffect(() => {
+    calculateStats();
+  }, [project, editorContent]);
+
+  const calculateStats = () => {
+    // 1. Total Words
+    let totalWords = 0;
+    project.chapters.forEach(c => {
+      c.sections.forEach(s => {
+        totalWords += (s.content || '').split(/\s+/).filter(w => w.length > 0).length;
+      });
+    });
+
+    // 2. Days Left
+    let daysLeft = 0;
+    let dailyGoal = 0;
+    const TARGET_WORDS = 10000; // Standard Licence Pro
+
+    if (project.deadline) {
+      const today = new Date();
+      const deadlineDate = new Date(project.deadline);
+      const diffTime = Math.abs(deadlineDate.getTime() - today.getTime());
+      daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      
+      if (daysLeft > 0) {
+        dailyGoal = Math.max(0, Math.ceil((TARGET_WORDS - totalWords) / daysLeft));
+      }
+    }
+
+    setStats({
+      wordCount: totalWords,
+      daysLeft,
+      dailyGoal,
+      progress: Math.min(100, Math.round((totalWords / TARGET_WORDS) * 100))
+    });
+  };
+
+  const handleSetDeadline = (date: string) => {
+    onUpdateProject({ ...project, deadline: date });
+    setShowDateInput(false);
+  };
 
   const incrementGenCount = () => {
     if (!isPremium) {
@@ -150,7 +215,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       }
   }
 
-  // FEATURE: MAGIC EXPANDER
   const handleExpand = async () => {
       if (!isPremium) {
           if(confirm("Le 'Développeur Intelligent' est réservé aux membres Pro. Débloquer pour 3$ ?")) {
@@ -176,7 +240,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       }
   };
 
-  // FEATURE: BIBLIOGRAPHY
   const handleSuggestBiblio = async () => {
       setIsBiblioLoading(true);
       try {
@@ -200,6 +263,43 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       alert("Citation copiée !");
   };
 
+  const handleAddDoc = () => {
+      if (!newDocTitle || !newDocContent) return;
+      const newDoc: SourceDoc = {
+          id: Date.now().toString(),
+          title: newDocTitle,
+          content: newDocContent,
+          date: new Date()
+      };
+      setSourceDocs([...sourceDocs, newDoc]);
+      setNewDocTitle('');
+      setNewDocContent('');
+  };
+
+  const handleAskDoc = async () => {
+      if (!docQuery) return;
+      
+      const context = sourceDocs.map(d => `[Doc: ${d.title}]\n${d.content}`).join('\n\n');
+      if (!context) {
+          alert("Ajoutez d'abord des documents (copier-coller le texte).");
+          return;
+      }
+
+      setDocChatHistory([...docChatHistory, { sender: 'user', text: docQuery }]);
+      setIsDocLoading(true);
+      const q = docQuery;
+      setDocQuery('');
+
+      try {
+          const answer = await askDocumentContext(q, context);
+          setDocChatHistory(prev => [...prev, { sender: 'ai', text: answer }]);
+      } catch(e) {
+          setDocChatHistory(prev => [...prev, { sender: 'ai', text: "Erreur lors de l'analyse." }]);
+      } finally {
+          setIsDocLoading(false);
+      }
+  };
+
   const handleSaveContent = (content: string, status: Section['status']) => {
     if (!activeChapterId || !activeSectionId) return;
     
@@ -218,7 +318,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     onUpdateProject({ ...project, chapters: updatedChapters, updatedAt: new Date() });
   };
 
-  // EXPORT WORD (.DOC)
   const handleExportWord = () => {
     if (!isPremium) {
         if(confirm("L'export Word (.doc) est réservé aux membres Pro. Débloquer pour 3$ ?")) {
@@ -242,7 +341,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         });
     });
 
-    // Append Bibliography
     if (references.length > 0) {
         htmlContent += `<h2 style="page-break-before: always; color: #2e3546; font-size: 18pt; margin-top: 20px;">Bibliographie</h2>`;
         references.forEach(ref => {
@@ -273,7 +371,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     setShowExportMenu(false);
   };
 
-  // EXPORT PDF (VIA PRINT)
   const handleExportPDF = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -334,7 +431,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   return (
-    <div className="flex h-screen bg-[#F3F4F6] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
+    <div className="flex h-[100dvh] bg-[#F3F4F6] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
       
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
@@ -346,9 +443,9 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full opacity-0'} transition-all duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-50 absolute md:relative shadow-xl md:shadow-none`}>
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
+        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
             <div className="flex items-center gap-2 font-bold">
-                <FileText size={16} className="text-indigo-400"/>
+                <FileText size={16} className="text-emerald-400"/>
                 <span className="truncate max-w-[150px]">Éditeur Pro</span>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white"><ChevronLeft /></button>
@@ -356,15 +453,15 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
         {/* FREE TIER BANNER */}
         {!isPremium && (
-            <div className="bg-indigo-50 p-4 border-b border-indigo-100">
-                <div className="flex items-center justify-between text-xs font-bold text-indigo-900 mb-2">
+            <div className="bg-emerald-50 p-4 border-b border-emerald-100">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-2">
                     <span>Essai Gratuit</span>
                     <span>{generationCount}/{MAX_FREE_GENERATIONS}</span>
                 </div>
-                <div className="w-full bg-indigo-200 rounded-full h-1.5 mb-3">
-                    <div className="bg-indigo-600 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((generationCount/MAX_FREE_GENERATIONS)*100, 100)}%` }}></div>
+                <div className="w-full bg-emerald-200 rounded-full h-1.5 mb-3">
+                    <div className="bg-emerald-600 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((generationCount/MAX_FREE_GENERATIONS)*100, 100)}%` }}></div>
                 </div>
-                <button onClick={() => navigate('/pricing')} className="w-full flex items-center justify-center gap-2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">
+                <button onClick={() => navigate('/pricing')} className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
                     <CreditCard size={12} />
                     Passer Pro (3$)
                 </button>
@@ -373,24 +470,78 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
           
-          {/* Outils Intelligents Section */}
+          {/* COACH PLANNING WIDGET */}
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                      <Calendar size={12} /> Coach Planning
+                  </h4>
+                  {project.deadline && <span className="text-xs font-bold text-emerald-600">J-{stats.daysLeft}</span>}
+              </div>
+              
+              {!project.deadline ? (
+                  showDateInput ? (
+                      <input 
+                          type="date" 
+                          className="w-full px-2 py-1 text-xs border border-slate-300 rounded mb-2"
+                          onChange={(e) => handleSetDeadline(e.target.value)}
+                      />
+                  ) : (
+                      <button 
+                          onClick={() => setShowDateInput(true)} 
+                          className="w-full py-2 bg-white border border-dashed border-slate-300 text-slate-500 text-xs rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition"
+                      >
+                          + Définir ma date de rendu
+                      </button>
+                  )
+              ) : (
+                  <div className="space-y-3">
+                      <div>
+                          <div className="flex justify-between text-xs mb-1">
+                              <span className="text-slate-500">Progression</span>
+                              <span className="font-bold text-slate-700">{stats.progress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-1.5">
+                              <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${stats.progress}%` }}></div>
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-1 text-right">{stats.wordCount} / 10 000 mots</p>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-1">
+                              <Target size={14} className="text-emerald-600" />
+                              <span className="text-xs font-bold text-slate-800">Objectif du Jour</span>
+                          </div>
+                          <p className="text-sm text-slate-600 font-medium">
+                              {stats.dailyGoal > 0 ? `Écrire ${stats.dailyGoal} mots` : "Objectif atteint ! 🎉"}
+                          </p>
+                      </div>
+                  </div>
+              )}
+          </div>
+
+          {/* Outils Intelligents Section - UNIFIED GREEN */}
           <div className="mb-4">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3 flex items-center gap-2">
                <Wand2 size={12} /> Boîte à outils IA
             </h4>
             <div className="space-y-2">
-                 <button onClick={handleExpand} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition text-left">
+                 <button onClick={handleExpand} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Maximize2 size={16}/></div>
                      Développer le texte
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={() => navigate('/jury')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center"><Users size={16}/></div>
+                 <button onClick={() => navigate('/jury')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Users size={16}/></div>
                      Simulateur Jury
                  </button>
-                 <button onClick={() => setShowBiblioPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><Book size={16}/></div>
+                 <button onClick={() => setShowBiblioPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Book size={16}/></div>
                      Bibliographe IA
+                 </button>
+                 <button onClick={() => setShowDocPanel(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Search size={16}/></div>
+                     Chat avec Sources
                  </button>
             </div>
           </div>
@@ -414,11 +565,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                             }}
                             className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-start gap-2 transition-all ${
                             isActive 
-                                ? 'bg-indigo-50 text-indigo-900 font-semibold shadow-sm' 
+                                ? 'bg-emerald-50 text-emerald-900 font-semibold shadow-sm' 
                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                         >
-                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${section.status === 'completed' ? 'bg-green-500' : isActive ? 'bg-indigo-500' : 'bg-slate-300'}`} />
+                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${section.status === 'completed' ? 'bg-emerald-500' : isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                             <span className="leading-tight">{section.title}</span>
                         </button>
                         </li>
@@ -433,15 +584,15 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         {/* Footer Sidebar with Export Menu */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 relative">
              <div className={`absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all origin-bottom duration-200 ${showExportMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-b border-slate-100">
+                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-100">
                      <div className="flex items-center gap-3">
-                        <FileText size={16} className="text-blue-600" />
+                        <FileText size={16} className="text-emerald-600" />
                         <span>Word (.doc)</span>
                      </div>
                      {!isPremium && <Lock size={12} className="text-slate-400" />}
                  </button>
-                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
-                     <Printer size={16} className="text-red-600" />
+                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                     <Printer size={16} className="text-emerald-600" />
                      <span>PDF (Impression)</span>
                  </button>
              </div>
@@ -466,7 +617,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
              <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
                  <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                      <div className="flex items-center gap-2 font-bold text-slate-800 text-lg">
-                         <Book className="text-blue-600" />
+                         <Book className="text-emerald-600" />
                          Bibliographe Express
                      </div>
                      <button onClick={() => setShowBiblioPanel(false)} className="text-slate-400 hover:text-slate-700"><X /></button>
@@ -478,10 +629,10 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                          <button 
                              onClick={handleSuggestBiblio}
                              disabled={isBiblioLoading}
-                             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition flex items-center justify-center gap-2"
+                             className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 transition flex items-center justify-center gap-2"
                          >
                              {isBiblioLoading ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : <Wand2 size={18} />}
-                             Suggérer des sources pour ce chapitre
+                             Suggérer des sources
                          </button>
                          <p className="text-xs text-slate-500 text-center">L'IA cherche des livres et articles pertinents et formate la citation en APA 7.</p>
                      </div>
@@ -492,12 +643,12 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Suggestions ({suggestedRefs.length})</h4>
                              <div className="space-y-3">
                                  {suggestedRefs.map(ref => (
-                                     <div key={ref.id} className="p-3 border border-blue-100 bg-blue-50 rounded-lg text-sm group">
+                                     <div key={ref.id} className="p-3 border border-emerald-100 bg-emerald-50 rounded-lg text-sm group">
                                          <p className="text-slate-800 font-medium mb-1">{ref.title}</p>
                                          <p className="text-slate-500 text-xs mb-2">{ref.author} ({ref.year})</p>
                                          <div className="flex gap-2">
-                                             <button onClick={() => handleAddRef(ref)} className="flex-1 py-1.5 bg-white border border-blue-200 text-blue-700 rounded font-medium text-xs hover:bg-blue-100">Ajouter</button>
-                                             <button onClick={() => handleCopyCitation(ref.citation)} className="px-3 py-1.5 bg-white border border-blue-200 text-slate-600 rounded hover:bg-slate-50" title="Copier"><Copy size={14}/></button>
+                                             <button onClick={() => handleAddRef(ref)} className="flex-1 py-1.5 bg-white border border-emerald-200 text-emerald-700 rounded font-medium text-xs hover:bg-emerald-100">Ajouter</button>
+                                             <button onClick={() => handleCopyCitation(ref.citation)} className="px-3 py-1.5 bg-white border border-emerald-200 text-slate-600 rounded hover:bg-slate-50" title="Copier"><Copy size={14}/></button>
                                          </div>
                                      </div>
                                  ))}
@@ -514,7 +665,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                                      const allText = references.map(r => r.citation).join('\n\n');
                                      navigator.clipboard.writeText(allText);
                                      alert('Toute la bibliographie a été copiée !');
-                                 }} className="text-xs text-blue-600 hover:underline">Tout copier</button>
+                                 }} className="text-xs text-emerald-600 hover:underline">Tout copier</button>
                              )}
                          </div>
                          
@@ -529,7 +680,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                                          <p className="text-slate-800 font-serif text-xs leading-relaxed pr-6">{ref.citation}</p>
                                          <button 
                                             onClick={() => handleCopyCitation(ref.citation)}
-                                            className="absolute top-2 right-2 text-slate-300 hover:text-blue-600"
+                                            className="absolute top-2 right-2 text-slate-300 hover:text-emerald-600"
                                          >
                                              <Copy size={14} />
                                          </button>
@@ -543,169 +694,211 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
          </div>
       )}
 
+      {/* DOC CHAT PANEL OVERLAY */}
+      {showDocPanel && (
+         <div className="absolute inset-0 z-[60] flex justify-end">
+             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowDocPanel(false)}></div>
+             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
+                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                     <div className="flex items-center gap-2 font-bold text-slate-800 text-lg">
+                         <Search className="text-emerald-600" />
+                         Chat avec Sources
+                     </div>
+                     <button onClick={() => setShowDocPanel(false)} className="text-slate-400 hover:text-slate-700"><X /></button>
+                 </div>
+
+                 <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* Documents List */}
+                    <div className="p-4 border-b border-slate-100 bg-slate-50 max-h-[30%] overflow-y-auto">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mes Documents ({sourceDocs.length})</h4>
+                        <div className="space-y-2">
+                            {sourceDocs.map(doc => (
+                                <div key={doc.id} className="bg-white p-2 rounded border border-slate-200 text-xs flex items-center justify-between">
+                                    <span className="truncate font-medium text-slate-700">{doc.title}</span>
+                                    <span className="text-slate-400">{doc.content.length > 100 ? Math.round(doc.content.length/1000) + 'k chars' : 'court'}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-slate-200">
+                            <input 
+                                className="w-full mb-2 px-2 py-1 text-xs border rounded" 
+                                placeholder="Titre (ex: Rapport 2023)" 
+                                value={newDocTitle}
+                                onChange={e => setNewDocTitle(e.target.value)}
+                            />
+                            <textarea 
+                                className="w-full mb-2 px-2 py-1 text-xs border rounded resize-none" 
+                                rows={3} 
+                                placeholder="Collez le texte du document ici..." 
+                                value={newDocContent}
+                                onChange={e => setNewDocContent(e.target.value)}
+                            />
+                            <button onClick={handleAddDoc} disabled={!newDocContent || !newDocTitle} className="w-full py-1.5 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700 disabled:opacity-50">
+                                + Ajouter ce document
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Chat Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+                        {docChatHistory.length === 0 && (
+                            <div className="text-center text-slate-400 text-sm py-8">
+                                Posez une question sur vos documents.<br/>Ex: "Que dit le rapport sur la RSE ?"
+                            </div>
+                        )}
+                        {docChatHistory.map((msg, idx) => (
+                            <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[85%] p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}>
+                                    {msg.text}
+                                </div>
+                            </div>
+                        ))}
+                        {isDocLoading && (
+                            <div className="flex justify-start"><div className="bg-slate-100 p-3 rounded-xl text-sm text-slate-500">Analyse en cours...</div></div>
+                        )}
+                    </div>
+
+                    {/* Input */}
+                    <div className="p-4 border-t border-slate-100 bg-white">
+                        <div className="flex gap-2">
+                            <input 
+                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                placeholder="Votre question..."
+                                value={docQuery}
+                                onChange={e => setDocQuery(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleAskDoc()}
+                            />
+                            <button onClick={handleAskDoc} disabled={isDocLoading || !docQuery} className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50">
+                                <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+         </div>
+      )}
+
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         {/* Top Bar */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
-          <div className="flex items-center gap-4 min-w-0">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-20">
+          <div className="flex items-center gap-4">
             <button 
-              onClick={() => setSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition shrink-0"
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg"
             >
               <Menu size={20} />
             </button>
-            <nav className="hidden md:flex items-center text-sm text-slate-500 overflow-hidden">
-               <span className="font-medium text-slate-900 truncate max-w-[150px]">{activeChapter?.title}</span>
-               <span className="mx-2">/</span>
-               <span className="truncate max-w-[150px]">{activeSection?.title}</span>
-            </nav>
+            
+            <div className="flex flex-col">
+               <div className="flex items-center gap-2 text-xs text-slate-400 uppercase tracking-wider font-bold">
+                  <span>{activeChapter?.title || 'Chapitre'}</span>
+                  <ChevronRight size={12} />
+                  <span>{activeSection?.title || 'Section'}</span>
+               </div>
+               <div className="flex items-center gap-2">
+                 {activeSection?.status === 'completed' && <CheckCircle size={14} className="text-emerald-500"/>}
+                 <span className="font-bold text-slate-800 text-sm md:text-base truncate max-w-[200px] md:max-w-md">
+                   {activeSection?.title}
+                 </span>
+               </div>
+            </div>
           </div>
-          
-          {/* Scrollable Toolbar for Mobile */}
-          <div className="flex items-center gap-2 overflow-x-auto pl-2 scrollbar-hide">
-             <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 mr-4 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 whitespace-nowrap">
-                 <Save size={12} />
-                 {editorContent ? 'Sauvegardé' : 'Prêt'}
-             </div>
 
-             {/* BUTTON: EXPAND (MAGIC) */}
-              <button
-                onClick={handleExpand}
-                disabled={isGenerating || !editorContent}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
-                title="Transformer des notes en paragraphes"
-            >
-                <Maximize2 size={16} />
-                <span className="hidden md:inline">Développer</span>
-                {!isPremium && <Lock size={12} className="text-emerald-400 opacity-70" />}
-            </button>
-             
-             {/* BUTTON: IMPROVE */}
-             <button
-                onClick={() => setShowImproveInput(!showImproveInput)}
-                disabled={isGenerating || !editorContent}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
-            >
-                <Wand2 size={16} />
-                <span className="hidden md:inline">Améliorer</span>
-                {!isPremium && <Lock size={12} className="text-indigo-400 opacity-70" />}
-            </button>
-
-             {/* BUTTON: JURY SIMULATOR */}
-             <button
-                onClick={() => navigate('/jury')}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition disabled:opacity-50 group whitespace-nowrap"
-                title="S'entraîner au Grand Oral"
-            >
-                <Users size={16} />
-                <span className="hidden md:inline">Coach Jury</span>
-            </button>
-
-             <button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-md shadow-slate-900/10 transition disabled:opacity-70 ml-2 whitespace-nowrap"
-            >
+          <div className="flex items-center gap-3">
+             {/* Saving Indicator */}
+             <div className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                 {isGenerating ? (
-                    <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span className="hidden md:inline">Rédaction...</span>
-                    </>
+                   <span className="text-emerald-600 flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+                      Rédaction IA...
+                   </span>
                 ) : (
-                    <>
-                        <Bot size={16} />
-                        <span>{editorContent ? 'Régénérer' : 'Générer (IA)'}</span>
-                    </>
+                   <>
+                     <Save size={12} />
+                     <span>Enregistré</span>
+                   </>
                 )}
-            </button>
+             </div>
           </div>
         </header>
 
-        {/* Writing Surface */}
-        <main className="flex-1 overflow-y-auto relative bg-[#F3F4F6] p-4 md:p-8 flex justify-center">
-            
-            {/* The "Paper" */}
-            <div className="w-full max-w-[850px] min-h-[calc(100vh-8rem)] bg-white shadow-xl shadow-slate-200/50 rounded-lg md:rounded-sm px-4 py-6 md:px-16 md:py-20 relative transition-all">
-                
-                {/* Contextual Warning */}
-                {generationError && (
-                    <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md flex items-start gap-3 animate-fade-in">
-                        <AlertCircle className="text-red-500 mt-0.5" size={18} />
-                        <div>
-                            <p className="text-sm text-red-800 font-medium">Erreur de génération</p>
-                            <p className="text-xs text-red-600">{generationError}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* AI Improvement Input Floating */}
-                {showImproveInput && (
-                   <div className="mb-8 p-4 bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 rounded-xl flex gap-3 animate-fade-in sticky top-0 z-20 shadow-sm">
+        {/* Editor Area */}
+        <div className="flex-1 overflow-y-auto relative bg-slate-100/50">
+           <div className="max-w-3xl mx-auto py-8 px-4 md:py-12 md:px-12 min-h-full flex flex-col">
+              
+              {/* Humanizer Bar */}
+              <div className="mb-6 bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-2 sticky top-0 z-10">
+                 <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                    <Sparkles size={16} />
+                 </div>
+                 {showImproveInput ? (
+                    <div className="flex-1 flex gap-2">
                        <input 
-                           autoFocus
-                           type="text" 
-                           value={improveInstruction}
-                           onChange={(e) => setImproveInstruction(e.target.value)}
-                           placeholder={!isPremium ? "Fonctionnalité réservée aux membres Pro..." : "Instruction (ex: Rends le ton plus formel)..."}
-                           disabled={!isPremium}
-                           className="flex-1 px-4 py-2 text-sm border border-indigo-200 rounded-lg outline-none focus:border-indigo-400 bg-white min-w-0 disabled:bg-slate-100"
-                           onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
+                         type="text"
+                         className="flex-1 text-sm outline-none text-slate-700 placeholder-slate-400 bg-transparent"
+                         placeholder="Ex: Rends le ton plus formel, Ajoute une citation..."
+                         value={improveInstruction}
+                         onChange={(e) => setImproveInstruction(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
+                         autoFocus
                        />
                        <button 
-                          onClick={handleImprove}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2 shrink-0"
+                         onClick={handleImprove}
+                         className="bg-emerald-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-emerald-700"
                        >
-                           {isPremium ? 'Go' : <Lock size={14} />}
+                         Go
                        </button>
-                   </div>
-                )}
+                       <button onClick={() => setShowImproveInput(false)} className="p-1 text-slate-400 hover:text-slate-600"><X size={14}/></button>
+                    </div>
+                 ) : (
+                    <button 
+                       onClick={() => setShowImproveInput(true)}
+                       className="flex-1 text-left text-sm text-slate-400 hover:text-slate-600 transition"
+                    >
+                       Demander à l'IA d'améliorer, reformuler ou corriger ce texte...
+                    </button>
+                 )}
+              </div>
 
-                {/* Title in Document */}
-                <div className="mb-8 pb-4 border-b border-slate-100">
-                    <h1 className="text-xl md:text-3xl font-serif font-bold text-slate-900 leading-tight mb-2">
-                        {activeSection?.title}
-                    </h1>
-                    <p className="text-xs md:text-sm text-slate-400 font-sans uppercase tracking-widest">
-                        {activeChapter?.title}
-                    </p>
-                </div>
+              {/* Paper */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[60vh] p-4 md:p-16 relative cursor-text" onClick={() => textareaRef.current?.focus()}>
+                 {generationError && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2">
+                       <AlertCircle size={16} />
+                       {generationError}
+                    </div>
+                 )}
+                 
+                 <textarea
+                    ref={textareaRef}
+                    value={editorContent}
+                    onChange={(e) => {
+                       setEditorContent(e.target.value);
+                       handleSaveContent(e.target.value, 'pending');
+                    }}
+                    className="w-full h-full resize-none outline-none text-slate-800 text-lg leading-relaxed font-serif placeholder-slate-300 bg-transparent overflow-hidden"
+                    placeholder="Commencez à écrire ou utilisez 'Générer' pour laisser l'IA rédiger le premier jet..."
+                    spellCheck={false}
+                 />
 
-                {/* Content Editor */}
-                <div className="relative min-h-[400px]">
-                    {isGenerating && (
-                        <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-lg">
-                            <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-slate-100">
-                                <div className="relative w-16 h-16 mb-4">
-                                    <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-                                    <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-                                    <Bot className="absolute inset-0 m-auto text-indigo-600" size={24} />
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-800">Rédaction en cours</h3>
-                                <p className="text-slate-500 text-sm mt-1 text-center max-w-[200px]">L'IA structure ses arguments et rédige le contenu expert...</p>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <textarea
-                        ref={textareaRef}
-                        className="w-full h-full resize-none outline-none border-none p-0 text-base md:text-lg leading-[1.8] text-slate-800 font-serif placeholder-slate-300 bg-transparent overflow-hidden"
-                        placeholder="Le contenu de votre section apparaîtra ici. Cliquez sur 'Générer (IA)' pour commencer ou écrivez directement..."
-                        value={editorContent}
-                        onChange={(e) => {
-                            setEditorContent(e.target.value);
-                        }}
-                        onBlur={() => handleSaveContent(editorContent, editorContent.length > 100 ? 'completed' : 'pending')}
-                        spellCheck={false}
-                    />
-                </div>
-                
-                {/* Footer of Page */}
-                <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center text-slate-300 text-xs font-sans">
-                    <span>MémoirePro AI • Brouillon confidentiel</span>
-                    <span>{editorContent.split(/\s+/).filter(w => w.length > 0).length} mots</span>
-                </div>
-            </div>
-        </main>
+                 {/* Floating Action Button if empty */}
+                 {!editorContent && !isGenerating && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                       <button 
+                          onClick={handleGenerate}
+                          className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 font-bold text-white transition-all duration-200 bg-emerald-900 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-900 hover:bg-emerald-600 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                       >
+                          <Wand2 size={20} className="animate-pulse" />
+                          Générer cette section
+                       </button>
+                       <p className="mt-4 text-sm text-slate-400">L'IA va rédiger environ 400 mots basés sur votre plan.</p>
+                    </div>
+                 )}
+              </div>
+           </div>
+        </div>
+
       </div>
     </div>
   );

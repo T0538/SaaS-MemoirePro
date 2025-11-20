@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Mail, Building, User, MessageSquare, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -64,7 +65,7 @@ export const ContactPage: React.FC = () => {
             
             <div className="space-y-6 mb-12">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                    <Building size={20} />
                 </div>
                 <div>
@@ -73,7 +74,7 @@ export const ContactPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center shrink-0">
                    <User size={20} />
                 </div>
                 <div>
@@ -110,11 +111,11 @@ export const ContactPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prénom</label>
-                  <input required type="text" name="prenom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="prenom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom</label>
-                  <input required type="text" name="nom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="nom" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" />
                 </div>
               </div>
 
@@ -122,7 +123,7 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email professionnel</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input required type="email" name="email" placeholder="nom@ecole.fr" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="email" name="email" placeholder="nom@ecole.fr" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" />
                 </div>
               </div>
 
@@ -130,7 +131,7 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Établissement / Entreprise</label>
                 <div className="relative">
                   <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input required type="text" name="etablissement" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <input required type="text" name="etablissement" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" />
                 </div>
               </div>
 
@@ -138,14 +139,14 @@ export const ContactPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Message</label>
                 <div className="relative">
                   <MessageSquare className="absolute left-4 top-4 text-slate-400" size={18} />
-                  <textarea required name="message" rows={4} placeholder="Nombre d'étudiants, besoins spécifiques..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+                  <textarea required name="message" rows={4} placeholder="Nombre d'étudiants, besoins spécifiques..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea>
                 </div>
               </div>
 
               <button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                className="w-full py-4 bg-slate-900 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
               >
                 {isLoading ? 'Envoi en cours...' : (
                   <>Envoyer la demande <ArrowRight size={18} /></>

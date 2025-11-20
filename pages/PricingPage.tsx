@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 export const PricingPage: React.FC = () => {
   return (
-    <div className="bg-slate-50 min-h-screen py-20 animate-fade-in">
+    <div className="bg-white min-h-screen py-20 animate-fade-in">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-4xl font-serif font-bold text-slate-900 mb-4">Investissez dans votre réussite</h1>
@@ -17,7 +17,7 @@ export const PricingPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           
           {/* Free Tier */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col hover:border-emerald-200 transition-colors">
             <div className="mb-6">
               <h3 className="text-xl font-bold text-slate-900">Découverte</h3>
               <div className="flex items-baseline mt-2">
@@ -42,46 +42,46 @@ export const PricingPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Pro Tier */}
-          <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-8 flex flex-col relative transform md:-translate-y-4">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+          {/* Pro Tier - GREEN CARD */}
+          <div className="bg-emerald-800 rounded-2xl shadow-xl border border-emerald-700 p-8 flex flex-col relative transform md:-translate-y-4">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-50 text-emerald-800 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-emerald-200 shadow-sm">
               Recommandé
             </div>
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white">Étudiant Pro</h3>
               <div className="flex items-baseline mt-2">
                 <span className="text-4xl font-serif font-bold text-white">3 $</span>
-                <span className="text-slate-400 ml-2">/mémoire</span>
+                <span className="text-emerald-200 ml-2">/mémoire</span>
               </div>
-              <p className="text-sm text-slate-400 mt-4">Tout pour rédiger et valider.</p>
+              <p className="text-sm text-emerald-100 mt-4">Tout pour rédiger et valider.</p>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> <strong>Rédaction illimitée</strong>
+              <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> <strong>Rédaction illimitée</strong>
               </li>
-              <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Humanisation du texte
+              <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> Humanisation du texte
               </li>
-              <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Développeur Intelligent (Notes → Texte)
+              <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> Développeur Intelligent
               </li>
-               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Générateur de Bibliographie (APA)
+               <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> Bibliographie APA
               </li>
-              <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Coach Grand Oral (Simulateur)
+              <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> Coach Grand Oral
               </li>
-               <li className="flex items-center gap-3 text-slate-300 text-sm">
-                <Check size={18} className="text-emerald-400" /> Export Word (.doc)
+               <li className="flex items-center gap-3 text-emerald-50 text-sm">
+                <Check size={18} className="text-emerald-300" /> Export Word (.doc)
               </li>
             </ul>
-            <Link to="/checkout" className="w-full py-3 px-6 rounded-xl bg-indigo-600 text-white font-bold text-center hover:bg-indigo-700 transition shadow-lg shadow-indigo-900/50">
+            <Link to="/checkout" className="w-full py-3 px-6 rounded-xl bg-white text-emerald-800 font-bold text-center hover:bg-emerald-50 transition shadow-lg">
               Choisir cette offre
             </Link>
           </div>
 
           {/* School Tier */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col hover:border-emerald-200 transition-colors">
              <div className="mb-6">
               <h3 className="text-xl font-bold text-slate-900">École / Univ</h3>
               <div className="flex items-baseline mt-2">
@@ -91,13 +91,13 @@ export const PricingPage: React.FC = () => {
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center gap-3 text-slate-600 text-sm">
-                <Check size={18} className="text-indigo-500" /> Licences multiples
+                <Check size={18} className="text-emerald-500" /> Licences multiples
               </li>
               <li className="flex items-center gap-3 text-slate-600 text-sm">
-                <Check size={18} className="text-indigo-500" /> Tableau de bord suivi tuteur
+                <Check size={18} className="text-emerald-500" /> Tableau de bord suivi tuteur
               </li>
               <li className="flex items-center gap-3 text-slate-600 text-sm">
-                <Check size={18} className="text-indigo-500" /> Détection anti-plagiat intégrée
+                <Check size={18} className="text-emerald-500" /> Détection anti-plagiat intégrée
               </li>
             </ul>
             <Link to="/contact" className="w-full py-3 px-6 rounded-xl border border-slate-200 text-slate-700 font-semibold text-center hover:bg-slate-50 transition block">

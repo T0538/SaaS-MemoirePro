@@ -76,7 +76,7 @@ export const CheckoutPage: React.FC = () => {
 
               <div className="flex justify-between items-center pt-4 border-t border-slate-100">
                 <span className="font-bold text-slate-900">Total TTC</span>
-                <span className="font-serif font-bold text-2xl text-indigo-600">3.00 $</span>
+                <span className="font-serif font-bold text-2xl text-emerald-600">3.00 $</span>
               </div>
 
               <div className="mt-8 bg-slate-50 p-4 rounded-xl flex items-start gap-3 text-xs text-slate-500">
@@ -90,7 +90,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 h-full flex flex-col justify-center items-center text-center">
               
-              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6 text-indigo-600">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-emerald-600">
                 <Lock size={32} />
               </div>
 
@@ -102,7 +102,7 @@ export const CheckoutPage: React.FC = () => {
               <button 
                 onClick={handleCheckout}
                 disabled={isLoading}
-                className="w-full max-w-md py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-70 transform hover:-translate-y-1"
+                className="w-full max-w-md py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-emerald-200 flex items-center justify-center gap-3 disabled:opacity-70 transform hover:-translate-y-1"
               >
                 {isLoading ? (
                     <>Traitement sécurisé...</>
