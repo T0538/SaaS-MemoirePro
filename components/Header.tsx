@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -367,6 +368,12 @@ export const Header: React.FC = () => {
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-emerald-100 p-1.5 rounded text-emerald-600"><Book size={16} /></div> Bibliographe
                     </Link>
+                    <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-emerald-100 p-1.5 rounded text-emerald-600"><Search size={16} /></div> Chat avec Sources
+                    </Link>
+                    <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-emerald-100 p-1.5 rounded text-emerald-600"><Calendar size={16} /></div> Coach Planning
+                    </Link>
                  </div>
                )}
             </div>
@@ -385,6 +392,9 @@ export const Header: React.FC = () => {
                     </Link>
                     <Link to="/destinations/africa" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-amber-100 p-1.5 rounded text-amber-600"><MapPin size={16} /></div> Afrique
+                    </Link>
+                    <Link to="/destinations/canada" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-red-50 p-1.5 rounded text-red-600"><MapPin size={16} /></div> Canada
                     </Link>
                  </div>
                )}
