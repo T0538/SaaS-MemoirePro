@@ -66,7 +66,7 @@ export const LandingPage: React.FC = () => {
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 4000); // 4 secondes pour laisser le temps de lire
+    }, 3000); // 3 secondes
 
     return () => clearInterval(interval);
   }, [isPaused]);
@@ -77,43 +77,43 @@ export const LandingPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Hero Section - Dynamic Slider */}
       <section 
-        className="relative pt-24 pb-32 overflow-hidden bg-emerald-950 text-white min-h-[700px] flex flex-col justify-center"
+        className="relative pt-24 pb-20 md:pt-32 md:pb-32 overflow-hidden bg-emerald-950 text-white min-h-[600px] flex flex-col justify-center"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         {/* Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-            <div className={`absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[100px] transition-all duration-1000 ease-in-out ${currentSlide % 2 === 0 ? 'translate-x-0' : 'translate-x-20'}`}></div>
-            <div className={`absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-800/20 rounded-full blur-[120px] transition-all duration-1000 ease-in-out ${currentSlide % 2 !== 0 ? 'translate-y-0' : 'translate-y-20'}`}></div>
+            <div className={`absolute top-[-10%] right-[-5%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-emerald-600/20 rounded-full blur-[80px] md:blur-[100px] transition-all duration-1000 ease-in-out ${currentSlide % 2 === 0 ? 'translate-x-0' : 'translate-x-20'}`}></div>
+            <div className={`absolute bottom-[-10%] left-[-10%] w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-teal-800/20 rounded-full blur-[100px] md:blur-[120px] transition-all duration-1000 ease-in-out ${currentSlide % 2 !== 0 ? 'translate-y-0' : 'translate-y-20'}`}></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex-1 flex flex-col justify-center items-center">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center flex-1 flex flex-col justify-center items-center w-full">
           
           {/* Badge */}
-          <div key={`badge-${currentSlide}`} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-900/50 text-emerald-300 text-sm font-bold mb-8 border border-emerald-800 backdrop-blur-sm animate-fade-in">
+          <div key={`badge-${currentSlide}`} className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-emerald-900/50 text-emerald-300 text-xs md:text-sm font-bold mb-6 md:mb-8 border border-emerald-800 backdrop-blur-sm animate-fade-in">
              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
              {activeSlide.badge}
           </div>
 
           {/* Title & Desc with Key for Animation */}
-          <div key={`content-${currentSlide}`} className="animate-fade-in max-w-4xl">
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-8 leading-tight tracking-tight transition-all duration-500">
+          <div key={`content-${currentSlide}`} className="animate-fade-in max-w-4xl w-full">
+            <h1 className="text-4xl md:text-7xl font-serif font-bold text-white mb-6 md:mb-8 leading-tight tracking-tight transition-all duration-500">
                 {activeSlide.title}
             </h1>
             
-            <p className="text-xl text-emerald-100/80 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+            <p className="text-lg md:text-xl text-emerald-100/80 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed font-medium px-4">
                 {activeSlide.desc}
             </p>
             
-            <div className="flex flex-col md:flex-row items-center justify-center gap-5">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 w-full px-4">
                 <Link 
                 to={isAuthenticated && activeSlide.linkPrimary === '/signup' ? "/app" : (isAuthenticated ? activeSlide.linkPrimary : "/signup")} 
-                className="w-full md:w-auto px-8 py-4 bg-emerald-500 text-white font-bold rounded-full hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transform hover:-translate-y-1 text-lg"
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 text-white font-bold rounded-full hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transform hover:-translate-y-1 text-base md:text-lg"
                 >
                 {isAuthenticated && activeSlide.linkPrimary === '/signup' ? "Accéder à mon espace" : activeSlide.ctaPrimary}
                 <ArrowRight size={20} />
                 </Link>
-                <Link to={activeSlide.linkSecondary} className="w-full md:w-auto px-8 py-4 bg-transparent border-2 border-emerald-800 text-emerald-100 font-bold rounded-full hover:bg-emerald-900 hover:border-emerald-700 transition-all flex items-center justify-center gap-2 text-lg">
+                <Link to={activeSlide.linkSecondary} className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-emerald-800 text-emerald-100 font-bold rounded-full hover:bg-emerald-900 hover:border-emerald-700 transition-all flex items-center justify-center gap-2 text-base md:text-lg">
                 {activeSlide.icon}
                 {activeSlide.ctaSecondary}
                 </Link>
@@ -121,36 +121,36 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Slider Dots */}
-          <div className="flex gap-3 mt-16 z-20">
+          <div className="flex gap-3 mt-12 md:mt-16 z-20">
              {HERO_SLIDES.map((slide, idx) => (
                  <button 
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-12 bg-emerald-400' : 'w-2 bg-emerald-800 hover:bg-emerald-700'}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-8 md:w-12 bg-emerald-400' : 'w-2 bg-emerald-800 hover:bg-emerald-700'}`}
                     aria-label={`Go to slide ${idx + 1}`}
                  />
              ))}
           </div>
 
           {/* Universities Logos */}
-          <div className="mt-16 pt-8 border-t border-emerald-900/50 flex flex-wrap justify-center gap-12 opacity-60">
-            <span className="text-emerald-200 text-xl font-serif font-bold">Université de Lyon</span>
-            <span className="text-emerald-200 text-xl font-serif font-bold">CNAM</span>
-            <span className="text-emerald-200 text-xl font-serif font-bold">IAE France</span>
-            <span className="text-emerald-200 text-xl font-serif font-bold">ESG</span>
+          <div className="mt-12 md:mt-16 pt-8 border-t border-emerald-900/50 flex flex-wrap justify-center gap-8 md:gap-12 opacity-60">
+            <span className="text-emerald-200 text-lg md:text-xl font-serif font-bold">Université de Lyon</span>
+            <span className="text-emerald-200 text-lg md:text-xl font-serif font-bold">CNAM</span>
+            <span className="text-emerald-200 text-lg md:text-xl font-serif font-bold">IAE France</span>
+            <span className="text-emerald-200 text-lg md:text-xl font-serif font-bold">ESG</span>
           </div>
         </div>
       </section>
 
       {/* Features Grid - Monochrome Icons */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-16 md:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
+          <div className="text-center mb-12 md:mb-20">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-4">Pourquoi choisir MémoirePro ?</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">Nous ne nous contentons pas de générer du texte. Nous construisons une réflexion académique structurée.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             {[
               {
                 icon: <ShieldCheck className="text-emerald-600" size={32} />,
@@ -183,9 +183,9 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Steps Section - Clean */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-6">Du sujet vague au mémoire validé.</h2>
               <div className="space-y-8">
