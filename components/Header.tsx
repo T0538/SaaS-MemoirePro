@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -35,30 +34,30 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 transition-all duration-300 font-sans shadow-sm">
+    <header className="sticky top-0 z-50 transition-all duration-300 font-sans shadow-md">
       
-      {/* TOP BAR : Logo | Search | Auth */}
-      <div className="bg-white border-b border-slate-100 py-3 px-6">
+      {/* TOP BAR : Logo | Search | Auth - GREEN BACKGROUND */}
+      <div className="bg-emerald-900 border-b border-emerald-800 py-3 px-6 text-white">
          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 text-slate-900 group shrink-0">
-                <div className="bg-emerald-600 text-white p-2 rounded-xl transition-all duration-300 shadow-md shadow-emerald-100 group-hover:scale-105">
+            <Link to="/" className="flex items-center gap-3 group shrink-0">
+                <div className="bg-white text-emerald-900 p-2 rounded-xl transition-all duration-300 shadow-md group-hover:scale-105">
                     <GraduationCap size={24} />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-lg font-serif font-bold tracking-tight leading-none group-hover:text-emerald-700 transition-colors">MémoirePro</span>
+                    <span className="text-lg font-serif font-bold tracking-tight leading-none text-white group-hover:text-emerald-200 transition-colors">MémoirePro</span>
                 </div>
             </Link>
 
-            {/* Search Bar (Desktop Only) */}
+            {/* Search Bar (Desktop Only) - Semi-transparent */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
                 <form onSubmit={handleSearch} className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-300" size={18} />
                     <input 
                         type="text"
                         placeholder="Rechercher un guide, un outil..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all placeholder-slate-400"
+                        className="w-full bg-emerald-800/50 border border-emerald-700 rounded-full py-2.5 pl-10 pr-4 text-sm text-white placeholder-emerald-300/70 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-800 transition-all"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -72,25 +71,25 @@ export const Header: React.FC = () => {
                         <div className="relative group">
                             <button 
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2.5 text-sm font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-2 rounded-full transition-all shadow-sm"
+                                className="flex items-center gap-2.5 text-sm font-bold text-emerald-100 hover:text-white bg-emerald-800 hover:bg-emerald-700 border border-emerald-700 px-3 py-2 rounded-full transition-all shadow-sm"
                             >
-                                <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100">
+                                <div className="w-8 h-8 bg-emerald-700 text-white rounded-full flex items-center justify-center border border-emerald-600">
                                     <User size={16} />
                                 </div>
                                 <span className="max-w-[100px] truncate">{user.name || 'Compte'}</span>
                                 <ChevronDown size={14} />
                             </button>
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 z-50">
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 z-50 text-slate-800">
                                 <Link to="/app" className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 font-medium">Accéder à l'App</Link>
                                 <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-slate-50">Déconnexion</button>
                             </div>
                         </div>
                     ) : (
                         <>
-                            <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-50 transition-colors">
+                            <Link to="/login" className="text-sm font-bold text-emerald-100 hover:text-white px-4 py-2 rounded-full hover:bg-emerald-800 transition-colors">
                                 Connexion
                             </Link>
-                            <Link to="/signup" className="inline-flex items-center justify-center px-5 py-2 text-sm font-bold text-white transition-all duration-200 bg-slate-900 rounded-full hover:bg-emerald-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            <Link to="/signup" className="inline-flex items-center justify-center px-5 py-2 text-sm font-bold text-emerald-900 transition-all duration-200 bg-white rounded-full hover:bg-emerald-50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                                 Démarrer
                             </Link>
                         </>
@@ -98,7 +97,7 @@ export const Header: React.FC = () => {
                 </div>
 
                 <button 
-                    className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="lg:hidden p-2 text-emerald-100 hover:bg-emerald-800 rounded-lg transition-colors"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
                     {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -107,19 +106,19 @@ export const Header: React.FC = () => {
          </div>
       </div>
 
-      {/* NAVIGATION BAR : Menu Items */}
-      <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 hidden lg:block">
+      {/* NAVIGATION BAR : Menu Items - WHITE BACKGROUND */}
+      <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 hidden lg:block shadow-sm">
           <div className="max-w-7xl mx-auto px-6">
               <nav className="flex items-center gap-8 h-14 text-sm font-medium">
                   
                   {/* Mega Menu: Fonctionnalités */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                      <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold">
+                      <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">
                           Fonctionnalités
                           <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-emerald-600" />
                       </button>
                       {/* Dropdown Content */}
-                        <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[800px] bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-12 z-50 mt-1">
+                        <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[800px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-emerald-500 border-x border-b border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-12 z-50 mt-0">
                         <div className="col-span-7 p-8 border-r border-slate-50">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                 <PenTool size={14} /> Rédaction & Structure
@@ -211,11 +210,11 @@ export const Header: React.FC = () => {
 
                    {/* Mega Menu: Orientation */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold">
+                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">
                         Orientation Post-Bac
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-emerald-600" />
                     </button>
-                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[900px] bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-3 z-50 mt-1">
+                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[900px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-emerald-500 border-x border-b border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-3 z-50 mt-0">
                         <div className="col-span-1 bg-slate-50 p-8 border-r border-slate-100 flex flex-col h-full relative overflow-hidden">
                             <div className="relative z-10">
                                 <div className="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-200">
@@ -294,11 +293,11 @@ export const Header: React.FC = () => {
 
                    {/* Mega Menu: Ressources */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold">
+                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">
                         Ressources
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-emerald-600" />
                     </button>
-                     <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[500px] bg-white rounded-xl shadow-xl border border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-1">
+                     <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[500px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-emerald-500 border-x border-b border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-0">
                         <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Guides & Conseils</p>
                             <Link to="/resources" className="text-xs font-bold text-emerald-600 hover:underline">Voir tout</Link>
@@ -326,12 +325,12 @@ export const Header: React.FC = () => {
                     </div>
                   </div>
 
-                  <Link to="/pricing" className="text-slate-600 hover:text-emerald-600 font-bold transition">Tarifs</Link>
+                  <Link to="/pricing" className="text-slate-600 hover:text-emerald-600 font-bold transition py-4">Tarifs</Link>
               </nav>
           </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Unchanged logic, updated colors */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-white z-40 pt-24 px-6 lg:hidden animate-fade-in flex flex-col h-screen overflow-y-auto">
           
@@ -368,7 +367,7 @@ export const Header: React.FC = () => {
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-emerald-100 p-1.5 rounded text-emerald-600"><Book size={16} /></div> Bibliographe
                     </Link>
-                    <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-emerald-100 p-1.5 rounded text-emerald-600"><Search size={16} /></div> Chat avec Sources
                     </Link>
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
@@ -393,7 +392,7 @@ export const Header: React.FC = () => {
                     <Link to="/destinations/africa" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-amber-100 p-1.5 rounded text-amber-600"><MapPin size={16} /></div> Afrique
                     </Link>
-                    <Link to="/destinations/canada" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                     <Link to="/destinations/canada" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-red-50 p-1.5 rounded text-red-600"><MapPin size={16} /></div> Canada
                     </Link>
                  </div>
