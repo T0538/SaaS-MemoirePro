@@ -18,6 +18,7 @@ import { LoginPage } from './pages/LoginPage';
 import { JurySimulatorPage } from './pages/JurySimulatorPage';
 import { OrientationPage } from './pages/OrientationPage';
 import { DestinationPage } from './pages/DestinationPage';
+import { FilierePage } from './pages/FilierePage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GraduationCap } from 'lucide-react';
@@ -182,6 +183,7 @@ const App = () => {
         {/* Public Feature Routes */}
         <Route path="/orientation" element={<MarketingLayout><OrientationPage /></MarketingLayout>} />
         <Route path="/destinations/:region" element={<MarketingLayout><DestinationPage /></MarketingLayout>} />
+        <Route path="/filieres/:slug" element={<MarketingLayout><FilierePage /></MarketingLayout>} />
 
         {/* Protected App Routes */}
         <Route 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb } from 'lucide-react';
+import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -8,6 +9,7 @@ export const Header: React.FC = () => {
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isOrientationOpen, setIsOrientationOpen] = useState(false);
+  const [isFilieresOpen, setIsFilieresOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -291,6 +293,40 @@ export const Header: React.FC = () => {
                     </div>
                   </div>
 
+                   {/* Mega Menu: Filières (NEW) */}
+                  <div className="relative group mega-menu-group h-full flex items-center">
+                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">
+                        Filières
+                        <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-emerald-600" />
+                    </button>
+                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-1/2 -translate-x-1/2 w-[800px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-emerald-500 border-x border-b border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-0">
+                       <div className="grid grid-cols-4 gap-4">
+                          {[
+                            { slug: 'informatique', name: 'Informatique', icon: Code, color: 'blue' },
+                            { slug: 'gestion', name: 'Gestion & RH', icon: Briefcase, color: 'emerald' },
+                            { slug: 'droit', name: 'Droit', icon: Scale, color: 'red' },
+                            { slug: 'sante', name: 'Santé', icon: Stethoscope, color: 'teal' },
+                            { slug: 'ingenierie', name: 'Ingénierie', icon: HardHat, color: 'orange' },
+                            { slug: 'art', name: 'Art & Design', icon: Palette, color: 'purple' },
+                            { slug: 'marketing', name: 'Marketing', icon: Award, color: 'pink' },
+                            { slug: 'social', name: 'Social', icon: Users, color: 'indigo' }
+                          ].map((f) => (
+                              <Link key={f.slug} to={`/filieres/${f.slug}`} className="flex flex-col items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group/item text-center">
+                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover/item:scale-110 bg-${f.color}-50 text-${f.color}-600`}>
+                                     {React.createElement(f.icon, { size: 24 })}
+                                  </div>
+                                  <span className="text-sm font-bold text-slate-800 group-hover/item:text-emerald-600">{f.name}</span>
+                              </Link>
+                          ))}
+                       </div>
+                       <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+                          <Link to="/orientation" className="text-sm font-bold text-emerald-600 hover:underline">
+                             Vous ne savez pas quoi choisir ? Faites le test d'orientation →
+                          </Link>
+                       </div>
+                    </div>
+                  </div>
+
                    {/* Mega Menu: Ressources */}
                   <div className="relative group mega-menu-group h-full flex items-center">
                     <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">
@@ -395,6 +431,30 @@ export const Header: React.FC = () => {
                      <Link to="/destinations/canada" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-red-50 p-1.5 rounded text-red-600"><MapPin size={16} /></div> Canada
                     </Link>
+                 </div>
+               )}
+            </div>
+
+             {/* Mobile Accordion Filières */}
+            <div className="border-b border-slate-100 py-4">
+               <button onClick={() => setIsFilieresOpen(!isFilieresOpen)} className="flex items-center justify-between w-full font-bold text-slate-900">
+                Filières <ChevronDown size={20} className={`transition-transform duration-300 ${isFilieresOpen ? 'rotate-180 text-emerald-600' : 'text-slate-400'}`} />
+               </button>
+               {isFilieresOpen && (
+                 <div className="mt-4 grid grid-cols-2 gap-2">
+                    {[
+                        { slug: 'informatique', name: 'Informatique' },
+                        { slug: 'gestion', name: 'Gestion' },
+                        { slug: 'droit', name: 'Droit' },
+                        { slug: 'sante', name: 'Santé' },
+                        { slug: 'marketing', name: 'Marketing' },
+                        { slug: 'ingenierie', name: 'Ingénierie' }
+                    ].map(f => (
+                         <Link key={f.slug} to={`/filieres/${f.slug}`} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center p-2 rounded-lg bg-slate-50 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 text-center border border-slate-100">
+                             {f.name}
+                         </Link>
+                    ))}
+                    <Link to="/orientation" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 text-center text-xs text-emerald-600 font-bold mt-2">Voir toutes les filières →</Link>
                  </div>
                )}
             </div>
