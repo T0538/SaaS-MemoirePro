@@ -31,7 +31,9 @@ import {
   MessageSquare,
   ArrowRight,
   Check,
-  Home 
+  Home,
+  Upload, // Added Upload icon
+  File as FileIcon // Added File icon
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom'; 
 
@@ -71,6 +73,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [docQuery, setDocQuery] = useState('');
   const [docChatHistory, setDocChatHistory] = useState<{sender: 'user'|'ai', text: string}[]>([]);
   const [isDocLoading, setIsDocLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input
 
   // PLANNING COACH STATE
   const [showDateInput, setShowDateInput] = useState(false);
@@ -194,6 +197,45 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
           return false;
       }
       return true;
+  };
+
+  // --- FILE UPLOAD HANDLER ---
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Simulate reading PDF/DOCX (In real app, use pdf.js or mammoth.js)
+    // Here we read text files natively, and "pretend" to read others for UI demo
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      const newDoc: SourceDoc = {
+        id: Date.now().toString(),
+        title: file.name,
+        content: content || "Contenu du fichier extrait...",
+        date: new Date()
+      };
+      setSourceDocs([...sourceDocs, newDoc]);
+    };
+
+    if (file.type === "text/plain") {
+      reader.readAsText(file);
+    } else {
+      // For PDF/Word in this frontend-only demo, we simulate extraction
+      // or warn the user.
+      alert("Note : L'extraction PDF/Word nécessite un serveur. Pour cette démo, un document vide est ajouté. Veuillez copier-coller le texte pour une analyse réelle.");
+      const newDoc: SourceDoc = {
+        id: Date.now().toString(),
+        title: file.name,
+        content: "(Contenu binaire non extrait - Copiez le texte ici)",
+        date: new Date()
+      };
+      setSourceDocs([...sourceDocs, newDoc]);
+    }
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleGenerate = async () => {
@@ -324,7 +366,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       
       const context = sourceDocs.map(d => `[Doc: ${d.title}]\n${d.content}`).join('\n\n');
       if (!context) {
-          alert("Ajoutez d'abord des documents (copier-coller le texte).");
+          alert("Ajoutez d'abord des documents.");
           return;
       }
 
@@ -761,6 +803,26 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                         </div>
                         <div className="mt-3 pt-3 border-t border-slate-200">
                             <input 
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                accept=".txt,.md,.pdf,.doc,.docx"
+                                className="hidden"
+                            />
+                            <button 
+                                onClick={() => fileInputRef.current?.click()} 
+                                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded mb-2 flex items-center justify-center gap-2 border border-slate-200"
+                            >
+                                <Upload size={14} /> Importer un fichier
+                            </button>
+                            
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="h-px flex-1 bg-slate-200"></span>
+                                <span className="text-[10px] text-slate-400">OU</span>
+                                <span className="h-px flex-1 bg-slate-200"></span>
+                            </div>
+
+                            <input 
                                 className="w-full mb-2 px-2 py-1 text-xs border rounded" 
                                 placeholder="Titre (ex: Rapport 2023)" 
                                 value={newDocTitle}
@@ -768,13 +830,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                             />
                             <textarea 
                                 className="w-full mb-2 px-2 py-1 text-xs border rounded resize-none" 
-                                rows={3} 
+                                rows={2} 
                                 placeholder="Collez le texte du document ici..." 
                                 value={newDocContent}
                                 onChange={e => setNewDocContent(e.target.value)}
                             />
                             <button onClick={handleAddDoc} disabled={!newDocContent || !newDocTitle} className="w-full py-1.5 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700 disabled:opacity-50">
-                                + Ajouter ce document
+                                + Ajouter ce texte
                             </button>
                         </div>
                     </div>
@@ -783,7 +845,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
                         {docChatHistory.length === 0 && (
                             <div className="text-center text-slate-400 text-sm py-8">
-                                Posez une question sur vos documents.<br/>Ex: "Que dit le rapport sur la RSE ?"
+                                Importez vos cours ou PDF, puis posez une question.<br/>Ex: "Que dit le rapport sur la RSE ?"
                             </div>
                         )}
                         {docChatHistory.map((msg, idx) => (
@@ -803,7 +865,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                         <div className="flex gap-2">
                             <input 
                                 className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                                placeholder="Votre question..."
+                                placeholder="Votre question sur les documents..."
                                 value={docQuery}
                                 onChange={e => setDocQuery(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleAskDoc()}
