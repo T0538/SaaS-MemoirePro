@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { JuryPersona, JuryMessage, Domain } from '../types';
+import { JuryPersona, JuryMessage } from '../types';
 import { interactWithJury } from '../services/geminiService';
-import { User, MessageSquare, Send, ShieldAlert, Mic, Award, ArrowLeft, BarChart3, CheckCircle2, RefreshCcw } from 'lucide-react';
+import { User, MessageSquare, Send, ShieldAlert, Mic, Award, ArrowLeft, BarChart3, CheckCircle2, RefreshCcw, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// PERSONAS PRÉDÉFINIS AVEC PHOTOS RÉALISTES
 const JURY_PERSONAS: JuryPersona[] = [
   {
     id: '1',
@@ -33,14 +32,33 @@ const JURY_PERSONAS: JuryPersona[] = [
 ];
 
 export const JurySimulatorPage: React.FC = () => {
-  const [step, setStep] = useState<'setup' | 'simulation'>('setup');
-  const [topic, setTopic] = useState('');
-  const [selectedPersona, setSelectedPersona] = useState<JuryPersona>(JURY_PERSONAS[0]);
-  const [messages, setMessages] = useState<JuryMessage[]>([]);
+  // INITIALISATION AVEC PERSISTANCE (LOAD)
+  const [step, setStep] = useState<'setup' | 'simulation'>(() => {
+      return (localStorage.getItem('jury_step') as 'setup' | 'simulation') || 'setup';
+  });
+  const [topic, setTopic] = useState(() => localStorage.getItem('jury_topic') || '');
+  const [selectedPersona, setSelectedPersona] = useState<JuryPersona>(() => {
+      const saved = localStorage.getItem('jury_persona');
+      return saved ? JSON.parse(saved) : JURY_PERSONAS[0];
+  });
+  const [messages, setMessages] = useState<JuryMessage[]>(() => {
+      const saved = localStorage.getItem('jury_messages');
+      return saved ? JSON.parse(saved) : [];
+  });
+  const [currentScore, setCurrentScore] = useState(() => parseInt(localStorage.getItem('jury_score') || '100'));
+  
   const [currentInput, setCurrentInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentScore, setCurrentScore] = useState(100); // Confiance initiale
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // SAUVEGARDE AUTOMATIQUE À CHAQUE CHANGEMENT
+  useEffect(() => {
+      localStorage.setItem('jury_step', step);
+      localStorage.setItem('jury_topic', topic);
+      localStorage.setItem('jury_persona', JSON.stringify(selectedPersona));
+      localStorage.setItem('jury_messages', JSON.stringify(messages));
+      localStorage.setItem('jury_score', currentScore.toString());
+  }, [step, topic, selectedPersona, messages, currentScore]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,24 +66,43 @@ export const JurySimulatorPage: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, step]);
 
   const handleStart = async () => {
     if (!topic) return;
     setStep('simulation');
     setIsLoading(true);
     
-    // Premier message du Jury pour lancer la session
-    setTimeout(() => {
-      setMessages([
-        {
-          id: 'init',
-          sender: 'jury',
-          content: `Bonjour. Ravie de vous entendre aujourd'hui sur le sujet : "${topic}". Je suis ${selectedPersona.name}. Présentez-vous et exposez votre problématique, je vous écoute.`
-        }
-      ]);
-      setIsLoading(false);
-    }, 1500);
+    // Si c'est une nouvelle session (pas de messages), on lance l'intro
+    if (messages.length === 0) {
+        setTimeout(() => {
+        setMessages([
+            {
+            id: 'init',
+            sender: 'jury',
+            content: `Bonjour. Ravie de vous entendre aujourd'hui sur le sujet : "${topic}". Je suis ${selectedPersona.name}. Présentez-vous et exposez votre problématique, je vous écoute.`
+            }
+        ]);
+        setIsLoading(false);
+        }, 1500);
+    } else {
+        // Sinon on restaure juste l'état sans relancer l'intro
+        setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+      if (confirm("Voulez-vous vraiment effacer cette simulation et recommencer avec un nouveau sujet ?")) {
+          setStep('setup');
+          setTopic('');
+          setMessages([]);
+          setCurrentScore(100);
+          // Nettoyage du stockage
+          localStorage.removeItem('jury_step');
+          localStorage.removeItem('jury_topic');
+          localStorage.removeItem('jury_messages');
+          localStorage.removeItem('jury_score');
+      }
   };
 
   const handleSendMessage = async () => {
@@ -111,7 +148,7 @@ export const JurySimulatorPage: React.FC = () => {
           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition">
              <ArrowLeft size={16} />
           </div>
-          <span className="hidden md:inline">Quitter la simulation</span>
+          <span className="hidden md:inline">Retour au bureau</span>
         </Link>
         
         <div className="flex flex-col items-center">
@@ -119,10 +156,15 @@ export const JurySimulatorPage: React.FC = () => {
             <h1 className="font-serif font-bold text-slate-900 text-sm md:text-base">Grand Oral Simulator</h1>
         </div>
 
-        <div className="w-10 md:w-24 flex justify-end">
+        <div className="w-auto flex justify-end">
              {step === 'simulation' && (
-                 <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-slate-600" title="Recommencer">
-                     <RefreshCcw size={18} />
+                 <button 
+                    onClick={handleReset} 
+                    className="text-slate-400 hover:text-red-600 flex items-center gap-2 text-xs md:text-sm font-bold transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100" 
+                    title="Recommencer"
+                 >
+                     <Trash2 size={16} />
+                     <span className="hidden md:inline">Nouvelle simulation</span>
                  </button>
              )}
         </div>
@@ -131,7 +173,6 @@ export const JurySimulatorPage: React.FC = () => {
       <main className="flex-1 overflow-hidden flex flex-col relative">
         
         {step === 'setup' ? (
-          // FIX MOBILE: Utilisation de overflow-y-auto et min-h-full pour permettre le scroll si le clavier cache l'input
           <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col items-center justify-start md:justify-center min-h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50 via-slate-50 to-slate-100">
             <div className="w-full max-w-4xl mx-auto animate-fade-in py-10 md:py-0">
               

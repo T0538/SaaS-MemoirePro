@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
 import { Domain, ThesisProject, WizardStep, Chapter } from './types';
@@ -51,9 +50,34 @@ const ToolApp = () => {
   const [project, setProject] = useState<ThesisProject | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Au chargement, on pourrait vérifier le status Premium ici aussi si besoin
-  // Mais pour l'instant, DraftingBoard gère sa propre logique
+  // PERSISTENCE: Charger le projet au démarrage
+  useEffect(() => {
+      const savedProject = localStorage.getItem('memoirepro_project');
+      const savedStep = localStorage.getItem('memoirepro_step') as WizardStep;
+      
+      if (savedProject) {
+          try {
+              const parsed = JSON.parse(savedProject);
+              // Restaurer les dates
+              parsed.createdAt = new Date(parsed.createdAt);
+              parsed.updatedAt = new Date(parsed.updatedAt);
+              setProject(parsed);
+              setStep(savedStep || 'drafting');
+          } catch(e) {
+              console.error("Error loading saved project", e);
+          }
+      }
+  }, []);
 
+  // PERSISTENCE: Sauvegarder à chaque changement
+  useEffect(() => {
+      if (project) {
+          localStorage.setItem('memoirepro_project', JSON.stringify(project));
+          localStorage.setItem('memoirepro_step', step);
+      }
+  }, [project, step]);
+
+  // CHECK LICENCE POUR NOUVEAU PROJET
   const handleSetupComplete = async (data: { title: string; domain: Domain; context: string; importedOutline?: string }) => {
     setLoading(true);
     try {
@@ -94,6 +118,29 @@ const ToolApp = () => {
     }
   };
 
+  const handleResetProject = () => {
+      // Check credits for a NEW project if one already exists
+      const credits = parseInt(localStorage.getItem('memoirepro_credits') || '0');
+      
+      if (project && credits <= 0) {
+          if(confirm("Attention : Vous avez déjà un mémoire en cours. Pour en créer un second (nouveau sujet), vous devez acquérir une nouvelle licence (3$). Aller au paiement ?")) {
+              window.location.href = '/#/pricing';
+          }
+          return;
+      }
+
+      if(confirm("Attention : Cela va effacer votre mémoire actuel pour en commencer un nouveau. Voulez-vous continuer ?")) {
+          setProject(null);
+          setStep('setup');
+          localStorage.removeItem('memoirepro_project');
+          localStorage.removeItem('memoirepro_step');
+          // Consume credit
+          if (credits > 0) {
+              localStorage.setItem('memoirepro_credits', (credits - 1).toString());
+          }
+      }
+  }
+
   // Si on est en mode rédaction, on affiche l'éditeur plein écran sans layout marketing
   if (step === 'drafting' && project) {
       return <DraftingBoard project={project} onUpdateProject={(p) => setProject(p)} />;
@@ -105,17 +152,24 @@ const ToolApp = () => {
         <nav className="bg-white border-b border-slate-200 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 text-slate-900">
-              <div className="bg-slate-900 text-white p-2 rounded-lg">
+              <div className="bg-emerald-900 text-white p-2 rounded-lg">
                 <GraduationCap size={24} />
               </div>
               <div>
                 <span className="text-xl font-serif font-bold tracking-tight block leading-none">MémoirePro</span>
-                <span className="text--[10px] uppercase tracking-widest text-slate-500 font-semibold">Espace Étudiant</span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Espace Étudiant</span>
               </div>
             </div>
-            <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition">
-              Quitter
-            </Link>
+            <div className="flex gap-4">
+                {project && (
+                    <button onClick={handleResetProject} className="text-sm font-medium text-red-500 hover:text-red-700 transition">
+                        Nouveau Projet
+                    </button>
+                )}
+                <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition">
+                Quitter
+                </Link>
+            </div>
           </div>
         </nav>
 

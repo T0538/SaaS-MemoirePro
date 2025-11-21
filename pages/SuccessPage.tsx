@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,9 +5,14 @@ import { Link } from 'react-router-dom';
 export const SuccessPage: React.FC = () => {
   
   useEffect(() => {
-    // ACTIVATION DE LA LICENCE PRO
+    // ACTIVATION DE LA LICENCE PRO ET AJOUT DE CREDIT
     localStorage.setItem('memoirepro_license', 'premium');
-    // On peut aussi stocker la date pour info
+    
+    // Gestion des crédits (1 crédit = 1 mémoire)
+    const currentCredits = parseInt(localStorage.getItem('memoirepro_credits') || '0');
+    // On ajoute 1 crédit (ou on met à 1 si c'est le premier achat)
+    localStorage.setItem('memoirepro_credits', (currentCredits + 1).toString());
+    
     localStorage.setItem('memoirepro_license_date', new Date().toISOString());
   }, []);
 
@@ -24,19 +28,19 @@ export const SuccessPage: React.FC = () => {
         
         <h1 className="text-3xl font-serif font-bold text-slate-900 mb-4">Paiement Confirmé !</h1>
         <p className="text-slate-500 mb-8 text-lg leading-relaxed">
-          Félicitations ! Votre licence <strong>Étudiant Pro</strong> est active. Vous avez maintenant accès à la génération illimitée et aux exports Word.
+          Félicitations ! Votre licence <strong>Étudiant Pro</strong> est active. Vous avez débloqué 1 crédit de mémoire complet.
         </p>
         
         <div className="bg-slate-50 rounded-xl p-6 mb-8 text-left">
             <h4 className="font-bold text-slate-800 text-sm mb-2">Prochaines étapes :</h4>
             <ul className="space-y-2 text-sm text-slate-600">
-                <li className="flex items-center gap-2">✓ Un reçu a été envoyé par email.</li>
-                <li className="flex items-center gap-2">✓ Votre compte est débloqué.</li>
-                <li className="flex items-center gap-2">✓ Vous pouvez reprendre votre rédaction.</li>
+                <li className="flex items-center gap-2">✓ Crédit ajouté à votre compte.</li>
+                <li className="flex items-center gap-2">✓ Accès illimité aux outils IA.</li>
+                <li className="flex items-center gap-2">✓ Export Word débloqué.</li>
             </ul>
         </div>
 
-        <Link to="/app" className="block w-full py-4 px-6 bg-slate-900 text-white rounded-xl font-bold hover:bg-indigo-600 transition shadow-lg flex items-center justify-center gap-2 group">
+        <Link to="/app" className="block w-full py-4 px-6 bg-slate-900 text-white rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg flex items-center justify-center gap-2 group">
           Accéder à mon espace
           <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
         </Link>
