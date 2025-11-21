@@ -31,9 +31,9 @@ import {
   MessageSquare,
   ArrowRight,
   Check,
-  Home // Added Home icon
+  Home 
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom'; // Added Link
+import { useNavigate, Link } from 'react-router-dom'; 
 
 interface DraftingBoardProps {
   project: ThesisProject;
@@ -184,6 +184,18 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       }
   };
 
+  // --- PREMIUM FEATURE GATES ---
+  
+  const checkPremium = (featureName: string) => {
+      if (!isPremium) {
+          if(confirm(`La fonctionnalité '${featureName}' est réservée aux membres Pro (3$). Débloquer maintenant ?`)) {
+              navigate('/pricing');
+          }
+          return false;
+      }
+      return true;
+  };
+
   const handleGenerate = async () => {
     if (!activeChapter || !activeSection) return;
     
@@ -217,12 +229,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   const handleImprove = async () => {
-      if (!isPremium) {
-          if(confirm("L'humanisation et l'amélioration de texte sont réservées aux membres Pro. Débloquer pour 3$ ?")) {
-              navigate('/pricing');
-          }
-          return;
-      }
+      if (!checkPremium("Humanisation")) return;
 
       if (!improveInstruction || !editorContent) return;
       setIsGenerating(true);
@@ -240,12 +247,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   }
 
   const handleExpand = async () => {
-      if (!isPremium) {
-          if(confirm("Le 'Développeur Intelligent' est réservé aux membres Pro. Débloquer pour 3$ ?")) {
-              navigate('/pricing');
-          }
-          return;
-      }
+      if (!checkPremium("Développeur Intelligent")) return;
 
       if (!editorContent || editorContent.length < 10) {
           alert("Écrivez au moins quelques notes avant de développer.");
@@ -263,6 +265,23 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
           setIsGenerating(false);
       }
   };
+
+  const handleJuryClick = () => {
+      if (!checkPremium("Simulateur Jury")) return;
+      navigate('/jury');
+  }
+
+  const handleBiblioClick = () => {
+      if (!checkPremium("Bibliographe IA")) return;
+      setShowBiblioPanel(true);
+      handleToolSelect();
+  }
+
+  const handleDocChatClick = () => {
+      if (!checkPremium("Chat avec Sources")) return;
+      setShowDocPanel(true);
+      handleToolSelect();
+  }
 
   const handleSuggestBiblio = async () => {
       setIsBiblioLoading(true);
@@ -343,12 +362,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   const handleExportWord = () => {
-    if (!isPremium) {
-        if(confirm("L'export Word (.doc) est réservé aux membres Pro. Débloquer pour 3$ ?")) {
-            navigate('/pricing');
-        }
-        return;
-    }
+    if (!checkPremium("Export Word (.doc)")) return;
 
     const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title><style>body { font-family: 'Times New Roman', serif; font-size: 12pt; }</style></head><body>";
     const postHtml = "</body></html>";
@@ -554,17 +568,20 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                      Développer le texte
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={() => navigate('/jury')} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={handleJuryClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Users size={16}/></div>
                      Simulateur Jury
+                     {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={() => {setShowBiblioPanel(true); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={handleBiblioClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Book size={16}/></div>
                      Bibliographe IA
+                     {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={() => {setShowDocPanel(true); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
+                 <button onClick={handleDocChatClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Search size={16}/></div>
                      Chat avec Sources
+                     {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
             </div>
           </div>

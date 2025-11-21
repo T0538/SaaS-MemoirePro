@@ -35,12 +35,28 @@ const MarketingLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
   );
 };
 
-// Protection de route
+// Protection de route (Auth uniquement)
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const user = localStorage.getItem('memoirepro_user');
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+  return <>{children}</>;
+};
+
+// Protection de route (Premium uniquement)
+const PremiumRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const user = localStorage.getItem('memoirepro_user');
+  const license = localStorage.getItem('memoirepro_license');
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (license !== 'premium') {
+      return <Navigate to="/pricing" replace />;
+  }
+  
   return <>{children}</>;
 };
 
@@ -251,9 +267,9 @@ const App = () => {
         <Route 
           path="/jury" 
           element={
-            <ProtectedRoute>
+            <PremiumRoute>
               <JurySimulatorPage />
-            </ProtectedRoute>
+            </PremiumRoute>
           } 
         />
       </Routes>
