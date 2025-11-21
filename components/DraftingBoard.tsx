@@ -30,9 +30,10 @@ import {
   Search,
   MessageSquare,
   ArrowRight,
-  Check
+  Check,
+  Home // Added Home icon
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Added Link
 
 interface DraftingBoardProps {
   project: ThesisProject;
@@ -80,6 +81,15 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [isPremium, setIsPremium] = useState(false);
   const [generationCount, setGenerationCount] = useState(0);
   const MAX_FREE_GENERATIONS = 3;
+
+  // GOD MODE (DEV)
+  const activateGodMode = () => {
+      if(confirm("Activer le mode Admin (Premium gratuit) ?")) {
+          localStorage.setItem('memoirepro_license', 'premium');
+          setIsPremium(true);
+          alert("Mode Premium activé !");
+      }
+  }
 
   useEffect(() => {
     const license = localStorage.getItem('memoirepro_license');
@@ -458,7 +468,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-72'} transition-transform duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] fixed md:relative w-72 shadow-xl md:shadow-none`}>
         <div className="p-4 h-16 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
-            <div className="flex items-center gap-2 font-bold">
+            <div className="flex items-center gap-2 font-bold cursor-pointer" onDoubleClick={activateGodMode} title="Double-clic pour activer le mode Admin">
                 <FileText size={16} className="text-emerald-400"/>
                 <span className="truncate max-w-[150px]">Éditeur Pro</span>
             </div>
@@ -592,6 +602,34 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                 </div>
             ))}
           </div>
+        </div>
+        
+        {/* Footer Sidebar with Export Menu - RESTORED */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50 relative">
+             <div className={`absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all origin-bottom duration-200 ${showExportMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
+                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-100">
+                     <div className="flex items-center gap-3">
+                        <FileText size={16} className="text-emerald-600" />
+                        <span>Word (.doc)</span>
+                     </div>
+                     {!isPremium && <Lock size={12} className="text-slate-400" />}
+                 </button>
+                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                     <Printer size={16} className="text-emerald-600" />
+                     <span>PDF (Impression)</span>
+                 </button>
+             </div>
+
+             <button 
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition shadow-sm"
+             >
+                <div className="flex items-center gap-2">
+                    <Download size={16} />
+                    Exporter
+                </div>
+                <ChevronUp size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+             </button>
         </div>
       </div>
 
@@ -794,6 +832,11 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
           </div>
 
           <div className="flex items-center gap-3 shrink-0 ml-2">
+             {/* Home Button - NEW */}
+             <Link to="/" className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Retour à l'accueil">
+                 <Home size={18} />
+             </Link>
+
              <div className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                 {isGenerating ? (
                    <span className="text-emerald-600 flex items-center gap-1">
