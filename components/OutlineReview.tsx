@@ -61,7 +61,11 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
     htmlContent += `<p style="text-align: center; margin-bottom: 40px;">Structure prévisionnelle</p>`;
 
     editableChapters.forEach((c, idx) => {
-        htmlContent += `<h2>Chapitre ${idx + 1} : ${c.title}</h2>`;
+        // Détection intelligente du titre
+        const isSpecialChapter = /^(Introduction|Conclusion|Bibliographie|Partie|Module|Annexe)/i.test(c.title);
+        const displayTitle = isSpecialChapter ? c.title : `Chapitre ${idx + 1} : ${c.title}`;
+
+        htmlContent += `<h2>${displayTitle}</h2>`;
         htmlContent += `<ul>`;
         c.sections.forEach(s => {
             htmlContent += `<li>${s.title}</li>`;
@@ -119,9 +123,12 @@ export const OutlineReview: React.FC<OutlineReviewProps> = ({ chapters, onConfir
     `;
 
     editableChapters.forEach((c, idx) => {
+      const isSpecialChapter = /^(Introduction|Conclusion|Bibliographie|Partie|Module|Annexe)/i.test(c.title);
+      const displayTitle = isSpecialChapter ? c.title : `Chapitre ${idx + 1} : ${c.title}`;
+      
       content += `
         <div class="chapter">
-            <div class="chapter-title">Chapitre ${idx + 1} : ${c.title}</div>
+            <div class="chapter-title">${displayTitle}</div>
             <ul>
                 ${c.sections.map(s => `<li>${s.title}</li>`).join('')}
             </ul>

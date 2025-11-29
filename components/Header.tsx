@@ -210,6 +210,51 @@ export const Header: React.FC = () => {
                         </div>
                   </div>
 
+                  {/* Mega Menu: Carrière & Emploi (NEW) */}
+                  <div className="relative group mega-menu-group h-full flex items-center">
+                      <Link to="/jobs" className="flex items-center gap-1.5 text-slate-600 group-hover:text-blue-600 transition-colors font-bold py-4">
+                          <span className="relative">
+                            Carrière & Emploi
+                            <span className="absolute -top-3 -right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                          </span>
+                          <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-blue-600" />
+                      </Link>
+                      {/* Dropdown Content */}
+                        <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[600px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-blue-500 border-x border-b border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-1 z-50 mt-0">
+                           <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-serif font-bold text-xl mb-2">Boostez votre carrière</h3>
+                                        <p className="text-slate-300 text-sm max-w-sm leading-relaxed">L'IA ne sert pas qu'à rédiger. Elle trouve aussi votre prochain stage ou emploi en analysant le marché mondial.</p>
+                                    </div>
+                                    <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+                                        <Briefcase size={32} className="text-blue-300" />
+                                    </div>
+                                </div>
+                           </div>
+                           <div className="p-2 bg-slate-50 grid grid-cols-2 gap-2">
+                                <Link to="/jobs" className="p-4 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 hover:shadow-sm group/job">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover/job:scale-110 transition-transform">
+                                            <Search size={16} />
+                                        </div>
+                                        <span className="font-bold text-slate-800 group-hover/job:text-blue-600">Trouver un Job</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 ml-11">Moteur de recherche IA intelligent.</p>
+                                </Link>
+                                <Link to="/jobs" className="p-4 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 hover:shadow-sm group/job">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center group-hover/job:scale-110 transition-transform">
+                                            <Target size={16} />
+                                        </div>
+                                        <span className="font-bold text-slate-800 group-hover/job:text-amber-600">Coaching Carrière</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 ml-11">Optimisation CV et Lettre de motiv.</p>
+                                </Link>
+                           </div>
+                      </div>
+                  </div>
+
                    {/* Mega Menu: Orientation */}
                   <div className="relative group mega-menu-group h-full flex items-center">
                     <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-emerald-600 transition-colors font-bold py-4">

@@ -177,7 +177,7 @@ export const OrientationPage: React.FC = () => {
 
              {/* Recommendations Cards - Spaced Out */}
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
-                {result.recommendations.map((rec: any, idx: number) => (
+                {result.recommendations?.map((rec: any, idx: number) => (
                    <div key={idx} className="bg-white rounded-[2rem] border border-slate-200 p-8 hover:border-emerald-400 hover:shadow-2xl hover:shadow-emerald-100 transition-all group relative flex flex-col h-full">
                       
                       {/* Top Gradient Bar */}

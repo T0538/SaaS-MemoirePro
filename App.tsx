@@ -16,6 +16,7 @@ import { SignupPage } from './pages/SignupPage';
 import { LoginPage } from './pages/LoginPage';
 import { JurySimulatorPage } from './pages/JurySimulatorPage';
 import { OrientationPage } from './pages/OrientationPage';
+import { JobsPage } from './pages/JobsPage';
 import { DestinationPage } from './pages/DestinationPage';
 import { FilierePage } from './pages/FilierePage';
 import { Header } from './components/Header';
@@ -252,6 +253,7 @@ const App = () => {
 
         {/* Public Feature Routes */}
         <Route path="/orientation" element={<MarketingLayout><OrientationPage /></MarketingLayout>} />
+        <Route path="/jobs" element={<MarketingLayout><JobsPage /></MarketingLayout>} />
         <Route path="/destinations/:region" element={<MarketingLayout><DestinationPage /></MarketingLayout>} />
         <Route path="/filieres/:slug" element={<MarketingLayout><FilierePage /></MarketingLayout>} />
 

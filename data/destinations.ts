@@ -70,10 +70,10 @@ export const DESTINATIONS: Record<string, DestinationData> = {
       { month: "Juin", action: "Demande de Visa" }
     ],
     relatedGuides: [
-      { title: "Comment rédiger sa lettre de motivation Campus France ?", link: "/blog/guide-methodologique" },
-      { title: "Réussir son entretien consulaire (Campus France)", link: "/blog/reussir-soutenance" },
-      { title: "Top 10 des villes étudiantes les moins chères", link: "/blog/themes-memoire-licence-pro" },
-      { title: "Gérer son budget étudiant en Euro", link: "/resources" }
+      { title: "Comment rédiger sa lettre de motivation Campus France ?", link: "/blog/lettre-motivation-campus-france" },
+      { title: "Réussir son entretien consulaire (Campus France)", link: "/blog/entretien-admission-campus" },
+      { title: "Top 10 des villes étudiantes les moins chères", link: "/blog/structure-memoire-qhse" }, // Fallback to existing for now or create new
+      { title: "Gérer son budget étudiant en Euro", link: "/blog/guide-methodologique" } // Fallback
     ]
   },
   africa: {

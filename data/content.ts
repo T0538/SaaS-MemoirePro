@@ -97,76 +97,84 @@ export const BLOG_POSTS: BlogPost[] = [
       
       <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Phase 1 : La Problématisation</h3>
       <p class="mb-4 text-slate-700 leading-7">Tout part d'un constat terrain. Votre mémoire doit répondre à une question centrale. Elle doit être formulée sous forme de question ouverte.</p>
-      
-      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Phase 2 : L'État de l'Art</h3>
-      <p class="mb-4 text-slate-700 leading-7">Avant de donner votre avis, montrez que vous maîtrisez la théorie. C'est la revue de littérature.</p>
-
-      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Phase 3 : L'Empirique</h3>
-      <p class="mb-4 text-slate-700 leading-7">Comment avez-vous vérifié vos hypothèses ?</p>
-      <ul class="list-disc pl-6 space-y-3 mb-8 text-slate-700 marker:text-indigo-500">
-         <li><strong class="text-slate-900">Qualitatif</strong> : Entretiens (pour comprendre le "pourquoi").</li>
-         <li><strong class="text-slate-900">Quantitatif</strong> : Sondages (pour mesurer le "combien").</li>
-         <li><strong class="text-slate-900">Observation</strong> : Immersion terrain.</li>
-      </ul>
     `
   },
   {
     id: '4',
-    title: 'Exemples de Mémoires Validés',
-    category: 'Inspiration',
-    slug: 'exemples-memoires',
-    excerpt: 'Analyse de 3 mémoires ayant obtenu plus de 16/20. Points forts, structure et astuces à copier.',
+    title: 'Réussir sa Lettre de Motivation Campus France',
+    category: 'Candidature',
+    slug: 'lettre-motivation-campus-france',
+    excerpt: 'Les secrets pour structurer une lettre qui convainc les commissions d\'admission et Campus France. Structure, mots-clés et erreurs à éviter.',
     readTime: '10 min',
-    date: '05 Oct 2024',
-    author: 'Léa Dubois',
-    imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop',
+    date: '15 Nov 2024',
+    author: 'Coach Sarah',
+    imageUrl: 'https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?q=80&w=800&auto=format&fit=crop',
     content: `
-      <p class="lead text-xl text-slate-600 mb-8 leading-relaxed">Rien de tel que l'exemple pour comprendre. Voici une analyse de mémoires d'excellence.</p>
-      
-      <div class="space-y-8">
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-bold text-indigo-700">Mémoire 1 : Logistique Urbaine</h3>
-                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">17/20</span>
-            </div>
-            <p class="text-slate-600 mb-4"><strong class="text-slate-900">Sujet :</strong> Optimisation du dernier kilomètre.</p>
-            <p class="text-slate-600"><strong class="text-slate-900">Le + du jury :</strong> Une étude de coûts comparative réelle (Vélo cargo vs Camionnette) avec des données chiffrées de l'entreprise.</p>
-        </div>
+      <p class="lead text-xl text-slate-600 mb-8 leading-relaxed">Votre lettre de motivation est votre première "rencontre" avec le jury. Elle ne doit pas être une simple redite de votre CV, mais une démonstration de votre projet.</p>
 
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-bold text-indigo-700">Mémoire 2 : RSE & RH</h3>
-                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">16.5/20</span>
-            </div>
-            <p class="text-slate-600 mb-4"><strong class="text-slate-900">Sujet :</strong> Impact du télétravail sur la cohésion.</p>
-            <p class="text-slate-600"><strong class="text-slate-900">Le + du jury :</strong> L'utilisation d'une grille d'analyse sociologique pour décrypter les entretiens.</p>
+      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">La Structure Gagnante "Vous-Moi-Nous"</h3>
+      <p class="mb-4 text-slate-700 leading-7">Oubliez les modèles tout faits. Adoptez cette logique :</p>
+      
+      <div class="space-y-6 my-8">
+        <div class="bg-indigo-50 p-6 rounded-xl border-l-4 border-indigo-500">
+            <h4 class="font-bold text-indigo-900 text-lg mb-2">1. VOUS (L'établissement)</h4>
+            <p class="text-slate-700">Montrez que vous les connaissez. "Votre Master en Data Science est reconnu pour..." (Ne soyez pas flagorneur, soyez factuel).</p>
+        </div>
+        <div class="bg-emerald-50 p-6 rounded-xl border-l-4 border-emerald-500">
+            <h4 class="font-bold text-emerald-900 text-lg mb-2">2. MOI (Mon parcours)</h4>
+            <p class="text-slate-700">Non pas ce que vous avez fait, mais ce que vous avez APPRIS. "Mon stage chez X m'a révélé l'importance de..."</p>
+        </div>
+        <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+            <h4 class="font-bold text-amber-900 text-lg mb-2">3. NOUS (Le projet commun)</h4>
+            <p class="text-slate-700">Pourquoi VOUS + EUX = Succès ? "Intégrer votre école est la suite logique pour mon projet de devenir..."</p>
         </div>
       </div>
+
+      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Les 3 Erreurs Fatales</h3>
+      <ul class="list-disc pl-6 space-y-3 mb-8 text-slate-700 marker:text-red-500">
+        <li><strong>Le copier-coller visible :</strong> Oublier de changer le nom de l'école. C'est éliminatoire.</li>
+        <li><strong>Les phrases vides :</strong> "Je suis motivé et dynamique". Prouvez-le plutôt par des exemples.</li>
+        <li><strong>Les fautes d'orthographe :</strong> Faites-vous relire par 2 personnes différentes.</li>
+      </ul>
     `
   },
   {
     id: '5',
-    title: 'La bibliographie aux normes APA sans effort',
-    category: 'Académique',
-    slug: 'bibliographie-apa',
-    excerpt: 'Ne perdez plus de points bêtement. Les règles d\'or pour citer vos sources et les outils pour automatiser.',
-    readTime: '6 min',
-    date: '15 Sept 2024',
-    author: 'Sarah Cohen',
-    imageUrl: 'https://images.unsplash.com/photo-1507842217121-9e9d147d7f20?q=80&w=800&auto=format&fit=crop',
+    title: 'Entretien d\'Admission : Convaincre le Jury',
+    category: 'Candidature',
+    slug: 'entretien-admission-campus',
+    excerpt: 'Comment préparer ses réponses, gérer son stress et poser les bonnes questions lors de votre entretien Campus France ou universitaire.',
+    readTime: '12 min',
+    date: '20 Nov 2024',
+    author: 'Coach Sarah',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
     content: `
-      <p class="lead text-xl text-slate-600 mb-8 leading-relaxed">La bibliographie est souvent négligée. Pourtant, une bibliographie mal faite peut coûter jusqu'à 2 points et soulever des soupçons de plagiat.</p>
-      
-      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">La Norme APA 7 : Les Bases</h3>
-      <p class="mb-4 text-slate-700">Le format standard est : Auteur, A. A. (Année). <em>Titre en italique</em>. Éditeur.</p>
+      <p class="lead text-xl text-slate-600 mb-8 leading-relaxed">L'entretien n'est pas un interrogatoire, c'est un échange professionnel. Le jury cherche à valider votre cohérence et votre motivation.</p>
 
-      <div class="bg-slate-900 text-slate-300 p-6 rounded-xl font-mono text-sm my-8 shadow-lg">
-        <p class="mb-4"><span class="text-indigo-400">// Livre</span><br>Dupont, J. (2023). <em>Le Management Moderne</em>. Dunod.</p>
-        <p><span class="text-indigo-400">// Article Web</span><br>Martin, L. (2024). L'IA en entreprise. <em>Le Monde</em>. https://lemonde.fr/...</p>
+      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Les Questions Classiques (À préparer !)</h3>
+      <p class="mb-4 text-slate-700 leading-7">Ne soyez jamais pris au dépourvu par ces classiques :</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h4 class="font-bold text-slate-900 mb-3">"Présentez-vous"</h4>
+            <p class="text-sm text-slate-600">Préparez un pitch de 2 minutes chrono. Nom, parcours académique, expérience clé, et pourquoi vous êtes là aujourd'hui.</p>
+         </div>
+         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h4 class="font-bold text-slate-900 mb-3">"Pourquoi la France/Ce pays ?"</h4>
+            <p class="text-sm text-slate-600">Évitez "parce que c'est beau". Parlez qualité de l'enseignement, reconnaissance du diplôme, et liens culturels/économiques.</p>
+         </div>
+         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h4 class="font-bold text-slate-900 mb-3">"Quel est votre projet pro ?"</h4>
+            <p class="text-sm text-slate-600">Soyez précis. "Je veux travailler dans la finance" est trop vague. "Je vise un poste d'analyste risques en banque d'investissement" est mieux.</p>
+         </div>
+         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h4 class="font-bold text-slate-900 mb-3">"Avez-vous des questions ?"</h4>
+            <p class="text-sm text-slate-600">Posez TOUJOURS une question. Sur la vie associative, les stages, l'insertion pro... Cela montre votre intérêt.</p>
+         </div>
       </div>
 
-      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">Automatisez avec MémoirePro</h3>
-      <p class="mb-4 text-slate-700">Notre outil <strong class="text-indigo-600">Bibliographe Express</strong> génère ces citations pour vous. Ne le faites plus à la main.</p>
+      <h3 class="text-2xl font-serif font-bold text-indigo-800 mt-10 mb-6 border-b border-indigo-100 pb-2">La Tenue et l'Attitude</h3>
+      <p class="mb-4 text-slate-700 leading-7">On ne vous demande pas le costume cravate obligatoire, mais une tenue "Business Casual" est recommandée. Chemise/Blouse propre, pantalon correct. Souriez, regardez les membres du jury dans les yeux (sans les fixer), et soyez honnête si vous ne savez pas répondre à une question pointue.</p>
     `
   },
   {
