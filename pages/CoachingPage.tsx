@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 import { analyzeCV, generateCoverLetter } from '../services/geminiService';
 import { FileText, PenTool, CheckCircle, Loader2, AlertCircle, Upload, ChevronRight, Sparkles, Briefcase, Award, X } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import mammoth from 'mammoth';
 
-// Configure worker for pdfjs-dist
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure worker for pdfjs-dist (Local file for Vite compatibility)
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export const CoachingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'cv' | 'letter'>('cv');
@@ -31,6 +32,12 @@ export const CoachingPage: React.FC = () => {
     return fullText;
   };
 
+  const extractTextFromDocx = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -47,6 +54,15 @@ export const CoachingPage: React.FC = () => {
         } catch (e) {
            console.error("PDF Worker Error", e);
            alert("Erreur de lecture PDF (Worker). Veuillez copier-coller le texte pour l'instant ou réessayer.");
+           setIsLoading(false);
+           return;
+        }
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        try {
+           text = await extractTextFromDocx(file);
+        } catch (e) {
+           console.error("Docx Error", e);
+           alert("Erreur de lecture du fichier Word.");
            setIsLoading(false);
            return;
         }
@@ -174,7 +190,7 @@ export const CoachingPage: React.FC = () => {
                               type="file" 
                               ref={fileInputRef}
                               onChange={handleFileUpload}
-                              accept=".pdf,.txt"
+                              accept=".pdf,.txt,.docx"
                               className="hidden"
                             />
 
@@ -184,7 +200,7 @@ export const CoachingPage: React.FC = () => {
                                 className="w-full p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition flex flex-col items-center justify-center gap-2 text-slate-500 hover:text-blue-600 mb-4"
                               >
                                 <Upload size={24} />
-                                <span className="text-sm font-bold">Cliquez pour uploader votre CV (PDF)</span>
+                                <span className="text-sm font-bold">Cliquez pour uploader votre CV (PDF, Word)</span>
                                 <span className="text-xs">ou collez le texte ci-dessous</span>
                               </div>
                             ) : (
@@ -231,7 +247,7 @@ export const CoachingPage: React.FC = () => {
                                 onClick={triggerFileUpload}
                                 className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded-full flex items-center gap-1 transition"
                               >
-                                <Upload size={12} /> Importer un CV (PDF)
+                                <Upload size={12} /> Importer un CV (PDF, Word)
                               </button>
                               {uploadedFileName && <span className="text-xs text-green-600 font-bold flex items-center gap-1"><CheckCircle size={12}/> {uploadedFileName} chargé</span>}
                             </div>
