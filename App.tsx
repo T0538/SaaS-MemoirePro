@@ -17,6 +17,7 @@ import { LoginPage } from './pages/LoginPage';
 import { JurySimulatorPage } from './pages/JurySimulatorPage';
 import { OrientationPage } from './pages/OrientationPage';
 import { JobsPage } from './pages/JobsPage';
+import { CoachingPage } from './pages/CoachingPage';
 import { DestinationPage } from './pages/DestinationPage';
 import { FilierePage } from './pages/FilierePage';
 import { Header } from './components/Header';
@@ -169,11 +170,11 @@ const ToolApp = () => {
         <nav className="bg-white border-b border-slate-200 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 text-slate-900">
-              <div className="bg-emerald-900 text-white p-2 rounded-lg">
+              <div className="bg-blue-900 text-white p-2 rounded-lg">
                 <GraduationCap size={24} />
               </div>
               <div>
-                <span className="text-xl font-serif font-bold tracking-tight block leading-none">MémoirePro</span>
+                <span className="text-xl font-serif font-bold tracking-tight block leading-none">Nexia</span>
                 <span className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Espace Étudiant</span>
               </div>
             </div>
@@ -254,6 +255,7 @@ const App = () => {
         {/* Public Feature Routes */}
         <Route path="/orientation" element={<MarketingLayout><OrientationPage /></MarketingLayout>} />
         <Route path="/jobs" element={<MarketingLayout><JobsPage /></MarketingLayout>} />
+        <Route path="/coaching" element={<MarketingLayout><CoachingPage /></MarketingLayout>} />
         <Route path="/destinations/:region" element={<MarketingLayout><DestinationPage /></MarketingLayout>} />
         <Route path="/filieres/:slug" element={<MarketingLayout><FilierePage /></MarketingLayout>} />
 

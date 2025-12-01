@@ -13,11 +13,11 @@ const cleanJson = (text: string): string => {
 };
 
 // Initialisation sécurisée de l'IA
-// Utilisation de process.env typé (définis via vite.config.ts)
-const apiKey = (process.env.API_KEY as string) || '';
+// Utilisation de import.meta.env pour Vite (plus robuste en production)
+const apiKey = (import.meta.env.VITE_API_KEY as string) || (process.env.API_KEY as string) || '';
 
 if (!apiKey) {
-  console.warn("ATTENTION : Clé API Gemini manquante. Vérifiez le fichier .env ou vite.config.ts");
+  console.warn("ATTENTION : Clé API Gemini manquante. Vérifiez le fichier .env et assurez-vous que la variable commence par VITE_");
 }
 
 const ai = new GoogleGenAI({ apiKey });
@@ -495,24 +495,24 @@ export const analyzeOrientationProfile = async (profileData: any): Promise<any> 
 export const searchJobsWithAI = async (query: string, userLocation: string): Promise<any[]> => {
     // 1. Analyze the query with Gemini to extract intent (keywords, role, location if specified)
     const prompt = `
-      Tu es un chasseur de tête expert IA.
+      Tu es un expert en recrutement international.
       L'utilisateur cherche : "${query}".
       Sa localisation actuelle : "${userLocation}".
 
-      Génère une liste de 5 offres d'emploi fictives mais réalistes qui correspondent PARFAITEMENT à sa demande.
-      Si l'utilisateur cherche à l'étranger, respecte ça. Sinon, cherche autour de sa localisation.
-      
+      Génère une liste de 5 offres d'emploi RÉELLES (ou très réalistes basées sur le marché actuel).
+      Pour chaque offre, tu dois fournir les détails exacts d'entreprises qui recrutent généralement pour ce type de poste.
+
       Format JSON attendu par offre :
       {
         "id": "string",
         "title": "Titre du poste",
-        "company": "Nom de l'entreprise",
+        "company": "Nom de l'entreprise (ex: Google, L'Oréal, Startup X)",
         "location": "Ville, Pays",
         "type": "CDI / Stage / Alternance",
         "salary": "Salaire estimé (ex: 35k-45k€)",
-        "description": "Courte description accrocheuse (2 phrases max)",
-        "matchScore": 95 (Score de pertinence entre 0 et 100),
-        "skills": ["Compétence 1", "Compétence 2", "Compétence 3"],
+        "description": "Courte description accrocheuse",
+        "matchScore": 95,
+        "skills": ["Compétence 1", "Compétence 2"],
         "postedAt": "Il y a 2 jours"
       }
       
@@ -521,29 +521,113 @@ export const searchJobsWithAI = async (query: string, userLocation: string): Pro
 
     try {
         const response = await runWithRetry(() => ai.models.generateContent({
-            model: MODEL_FAST, // Fast model is enough for generating list
+            model: MODEL_FAST,
             contents: prompt,
             config: { responseMimeType: "application/json" }
         }));
         
         const jsonText = cleanJson(response.text || "[]");
-        return JSON.parse(jsonText);
+        const results = JSON.parse(jsonText);
+
+        // Enrichir avec des liens de recherche intelligents (Google Jobs / LinkedIn)
+        return results.map((job: any) => ({
+            ...job,
+            applyUrl: `https://www.google.com/search?ibp=htl;jobs&q=${encodeURIComponent(job.title + ' ' + job.company + ' ' + job.location)}`
+        }));
+
     } catch (e) {
         console.error("Job Search Error:", e);
-        // Fallback jobs
+        // Fallback jobs with smart links
         return [
             {
                 id: "1",
-                title: "Consultant Junior (Fallback)",
-                company: "Global Corp",
+                title: "Consultant Junior",
+                company: "Deloitte",
                 location: userLocation || "Paris, France",
                 type: "CDI",
-                salary: "35k€ - 42k€",
-                description: "Opportunité pour jeune diplômé dynamique. Formation assurée.",
+                salary: "38k€ - 45k€",
+                description: "Accompagnez la transformation digitale des grandes entreprises.",
+                matchScore: 85,
+                skills: ["Analyse", "PowerPoint", "Anglais"],
+                postedAt: "Il y a 1 jour",
+                applyUrl: `https://www.google.com/search?ibp=htl;jobs&q=${encodeURIComponent("Consultant Junior Deloitte " + userLocation)}`
+            },
+            {
+                id: "2",
+                title: "Business Developer",
+                company: "Tech Startup",
+                location: userLocation || "Paris, France",
+                type: "Stage",
+                salary: "1000€ - 1200€",
+                description: "Développez le portefeuille client d'une startup en pleine croissance.",
                 matchScore: 80,
-                skills: ["Analyse", "Communication", "Office 365"],
-                postedAt: "Il y a 1 jour"
+                skills: ["Vente", "Prospection", "CRM"],
+                postedAt: "Il y a 3 jours",
+                applyUrl: `https://www.google.com/search?ibp=htl;jobs&q=${encodeURIComponent("Business Developer Startup " + userLocation)}`
             }
         ];
     }
 };
+
+// --- COACHING CARRIÈRE ---
+
+export const analyzeCV = async (cvText: string, targetJob: string): Promise<string> => {
+  const prompt = `
+    RÔLE : Recruteur Senior Expert.
+    CV DU CANDIDAT (Texte brut) : "${cvText.substring(0, 5000)}"
+    POSTE VISÉ : "${targetJob}"
+
+    MISSION : 
+    Analyse ce CV et donne un feedback constructif et sévère pour l'améliorer.
+    
+    STRUCTURE DE LA RÉPONSE (Markdown) :
+    ### 🎯 Score Global : X/10
+    
+    ### ✅ Points Forts
+    - ...
+    
+    ### ⚠️ Points à Améliorer (Critique)
+    - ...
+    
+    ### 💡 Suggestions Concrètes de Reformulation
+    - ...
+  `;
+
+  try {
+    const response = await runWithRetry(() => ai.models.generateContent({
+      model: MODEL_REASONING,
+      contents: prompt
+    }));
+    return response.text || "Impossible d'analyser le CV.";
+  } catch (e) {
+    return "Erreur lors de l'analyse. Veuillez réessayer.";
+  }
+};
+
+export const generateCoverLetter = async (cvText: string, jobDescription: string): Promise<string> => {
+    const prompt = `
+      RÔLE : Expert en Rédaction de Lettres de Motivation (Style Direct et Impactant).
+      
+      CV DU CANDIDAT : "${cvText.substring(0, 3000)}"
+      OFFRE D'EMPLOI : "${jobDescription.substring(0, 3000)}"
+  
+      MISSION :
+      Rédige une lettre de motivation sur-mesure qui connecte les expériences du candidat aux besoins de l'entreprise.
+      
+      STYLE :
+      - Pas de phrases bateaux ("J'ai l'honneur de...").
+      - Introduction accrocheuse.
+      - Paragraphes courts.
+      - Appel à l'action clair à la fin.
+    `;
+  
+    try {
+      const response = await runWithRetry(() => ai.models.generateContent({
+        model: MODEL_REASONING,
+        contents: prompt
+      }));
+      return response.text || "Impossible de générer la lettre.";
+    } catch (e) {
+      return "Erreur lors de la rédaction. Veuillez réessayer.";
+    }
+  };
