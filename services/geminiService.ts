@@ -571,26 +571,72 @@ export const searchJobsWithAI = async (query: string, userLocation: string): Pro
 
 // --- COACHING CARRIÈRE ---
 
-export const analyzeCV = async (cvText: string, targetJob: string): Promise<string> => {
+export interface CVAnalysisResult {
+  score: number;
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  improvements: string[];
+}
+
+export const analyzeCV = async (cvText: string, targetJob: string): Promise<CVAnalysisResult> => {
   const prompt = `
-    RÔLE : Recruteur Senior Expert.
-    CV DU CANDIDAT (Texte brut) : "${cvText.substring(0, 5000)}"
+    RÔLE : Expert en Recrutement International (Type McKinsey/Google).
+    CV DU CANDIDAT (Texte brut) : "${cvText.substring(0, 8000)}"
     POSTE VISÉ : "${targetJob}"
 
     MISSION : 
-    Analyse ce CV et donne un feedback constructif et sévère pour l'améliorer.
+    Réalise un audit professionnel de ce CV. Sois direct, précis et constructif.
+    PAS DE LANGUE DE BOIS. PAS DE GÉNÉRALITÉS.
+
+    INSTRUCTIONS STRICTES DE STYLE :
+    1. INTERDIT D'UTILISER LE GRAS MARKDOWN (les étoiles **).
+    2. INTERDIT D'UTILISER LES PUCES MARKDOWN (* ou -) DANS LE TEXTE JSON.
+    3. Utilise un langage professionnel, corporatif et percutant.
+
+    FORMAT DE SORTIE (JSON UNIQUEMENT) :
+    {
+      "score": (Nombre entre 0 et 100),
+      "summary": "Un paragraphe exécutif résumant le profil en 3 phrases max.",
+      "strengths": ["Point fort 1 (bref)", "Point fort 2", "Point fort 3"],
+      "weaknesses": ["Point faible 1 (critique)", "Point faible 2"],
+      "improvements": ["Action concrète 1", "Action concrète 2", "Action concrète 3"]
+    }
+  `;
+
+  try {
+    const response = await runWithRetry(() => ai.models.generateContent({
+      model: MODEL_REASONING,
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    }));
+
+    const jsonText = cleanJson(response.text || "{}");
+    return JSON.parse(jsonText);
+
+  } catch (error) {
+    console.error("CV Analysis Error:", error);
+    throw new Error("L'analyse du CV a échoué. Veuillez réessayer.");
+  }
+};
+
+export const generateCoverLetter = async (cvText: string, jobDescription: string): Promise<string> => {
+  const prompt = `
+    RÔLE : Expert en Copywriting RH.
+    PROFIL CANDIDAT : "${cvText.substring(0, 3000)}"
+    OFFRE D'EMPLOI : "${jobDescription.substring(0, 3000)}"
+
+    MISSION :
+    Rédige une lettre de motivation ULTRA-PERSONNALISÉE et PERCUTANTE.
     
-    STRUCTURE DE LA RÉPONSE (Markdown) :
-    ### 🎯 Score Global : X/10
+    INSTRUCTIONS DE STYLE (CRITIQUE) :
+    1. **INTERDIT ABSOLU** d'utiliser des balises Markdown comme **gras**, *italique*, ou des titres (###).
+    2. **INTERDIT** de mettre des placeholders comme [Nom de l'entreprise] -> DÉDUIS-LE ou mets "votre entreprise".
+    3. PAS de "Objet: Candidature au poste de...". Commence directement par "Madame, Monsieur,".
+    4. Ton : Professionnel, Confiant, Orienté Résultats.
+    5. Format : Texte brut, paragraphes bien aérés.
     
-    ### ✅ Points Forts
-    - ...
-    
-    ### ⚠️ Points à Améliorer (Critique)
-    - ...
-    
-    ### 💡 Suggestions Concrètes de Reformulation
-    - ...
+    La lettre doit donner envie de rencontrer le candidat immédiatement.
   `;
 
   try {
@@ -598,36 +644,14 @@ export const analyzeCV = async (cvText: string, targetJob: string): Promise<stri
       model: MODEL_REASONING,
       contents: prompt
     }));
-    return response.text || "Impossible d'analyser le CV.";
-  } catch (e) {
-    return "Erreur lors de l'analyse. Veuillez réessayer.";
+
+    let text = response.text || "";
+    // Nettoyage ultime au cas où
+    text = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^Objet:.*\n/i, "").trim();
+    return text;
+
+  } catch (error) {
+    console.error("Cover Letter Error:", error);
+    throw new Error("La génération de la lettre a échoué.");
   }
 };
-
-export const generateCoverLetter = async (cvText: string, jobDescription: string): Promise<string> => {
-    const prompt = `
-      RÔLE : Expert en Rédaction de Lettres de Motivation (Style Direct et Impactant).
-      
-      CV DU CANDIDAT : "${cvText.substring(0, 3000)}"
-      OFFRE D'EMPLOI : "${jobDescription.substring(0, 3000)}"
-  
-      MISSION :
-      Rédige une lettre de motivation sur-mesure qui connecte les expériences du candidat aux besoins de l'entreprise.
-      
-      STYLE :
-      - Pas de phrases bateaux ("J'ai l'honneur de...").
-      - Introduction accrocheuse.
-      - Paragraphes courts.
-      - Appel à l'action clair à la fin.
-    `;
-  
-    try {
-      const response = await runWithRetry(() => ai.models.generateContent({
-        model: MODEL_REASONING,
-        contents: prompt
-      }));
-      return response.text || "Impossible de générer la lettre.";
-    } catch (e) {
-      return "Erreur lors de la rédaction. Veuillez réessayer.";
-    }
-  };
