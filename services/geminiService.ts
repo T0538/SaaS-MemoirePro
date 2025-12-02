@@ -12,6 +12,28 @@ const cleanJson = (text: string): string => {
   return clean.trim();
 };
 
+// Helper to clean Raw Text output from AI (remove markdown stars, prefixes)
+const cleanRawText = (text: string): string => {
+  // Remove stars used for bolding
+  let clean = text.replace(/\*\*/g, '').replace(/\*/g, '');
+  
+  // Remove common AI conversational prefixes (aggressive trimming)
+  const prefixesToRemove = [
+    /^Absolument[.,!]\s*/i,
+    /^Bien sûr[.,!]\s*/i,
+    /^Voici le texte[.,!:]\s*/i,
+    /^En tant qu'expert.*?[.,!:]\s*/i,
+    /^D'accord.*?[.,!]\s*/i,
+    /^Certainement.*?[.,!]\s*/i
+  ];
+  
+  prefixesToRemove.forEach(regex => {
+    clean = clean.replace(regex, '');
+  });
+
+  return clean.trim();
+};
+
 // Initialisation sécurisée de l'IA
 // Utilisation de import.meta.env pour Vite (plus robuste en production)
 const apiKey = (import.meta.env.VITE_API_KEY as string) || (process.env.API_KEY as string) || '';
@@ -31,10 +53,11 @@ const MODEL_FAST = 'gemini-2.5-flash';
 const HUMANIZER_INSTRUCTIONS = `
 DIRECTIVES CRITIQUES DE STYLE "NIVEAU MASTER/DOCTORAT" :
 
-1. **ANTI-ROBOT STRICT** :
+1. **ANTI-ROBOT STRICT & FORMATAGE** :
+   - INTERDIT : Le formatage Markdown (pas de **gras**, pas de *italique* avec des étoiles). Texte brut uniquement style Word.
+   - INTERDIT : Le méta-langage ("Voici la section...", "En tant qu'expert...", "Absolument..."). Commencer directement le sujet.
    - INTERDIT : Les phrases de transition lourdes ("Dans un premier temps", "Il est crucial de noter", "En conclusion").
    - INTERDIT : Les listes à puces systématiques. Privilégier les paragraphes rédigés et argumentés.
-   - INTERDIT : Les généralités vides ("De nos jours, le sujet est important...").
 
 2. **TON EXPERT & NUANCÉ** :
    - Utilise le "Nous" de modestie ou le "Il" impersonnel.
@@ -211,7 +234,7 @@ export const generateSectionContent = async (
       model: MODEL_REASONING, // PRO pour la qualité rédactionnelle
       contents: prompt,
     }));
-    return response.text || "";
+    return cleanRawText(response.text || "");
   } catch (error) {
     console.error("Erreur rédaction:", error);
     throw new Error("Service de rédaction momentanément indisponible.");
@@ -229,9 +252,10 @@ export const improveText = async (text: string, instruction: string): Promise<st
         
         MISSION : Réécris le texte en appliquant l'instruction.
         CRITÈRES : Ton universitaire, vocabulaire riche, syntaxe impeccable.
+        FORMAT : Texte brut sans markdown ni commentaires.
       `
     }));
-    return response.text || text;
+    return cleanRawText(response.text || text);
   } catch (e) {
     return text;
   }
@@ -240,8 +264,8 @@ export const improveText = async (text: string, instruction: string): Promise<st
 export const expandContent = async (text: string, domain: string): Promise<string> => {
   try {
     const prompt = `
-      RÔLE : Expert en ${domain}.
-      MISSION : Développer ces notes pour en faire un texte académique complet.
+      RÔLE : Expert académique en ${domain}.
+      MISSION : Transformer ces notes en un texte académique formel et dense.
       
       NOTES SOURCE : "${text}"
 
@@ -249,14 +273,20 @@ export const expandContent = async (text: string, domain: string): Promise<strin
       - Tripler le volume.
       - Ajouter des exemples concrets et des définitions.
       - Assurer les transitions logiques.
-      - Ton formel et scientifique.
+      - Ton formel, scientifique et professionnel.
+
+      FORMAT IMPÉRATIF :
+      - Texte brut uniquement (style Word).
+      - AUCUNE étoile (*) pour le gras ou l'italique.
+      - AUCUNE phrase de discussion ("Voici le texte...", "Absolument...", "J'ai développé...").
+      - Commence DIRECTEMENT par le contenu rédactionnel.
     `;
 
     const response = await runWithRetry(() => ai.models.generateContent({
       model: MODEL_REASONING,
       contents: prompt
     }));
-    return response.text || text;
+    return cleanRawText(response.text || text);
   } catch (e) {
     throw new Error("Impossible d'étendre le contenu.");
   }

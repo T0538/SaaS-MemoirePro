@@ -1,14 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { searchJobsWithAI } from '../services/geminiService';
-import { Search, MapPin, Briefcase, DollarSign, Sparkles, ArrowRight, Loader2, Building2, Globe, Filter } from 'lucide-react';
+import { Search, MapPin, Briefcase, DollarSign, Sparkles, ArrowRight, Loader2, Building2, Globe, Filter, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+// --- CONFIGURATION DES PORTAILS LOCAUX ---
+const JOB_PORTALS: Record<string, { name: string; url: string; logo: string; description: string; searchUrl?: string }[]> = {
+  'CI': [
+    { name: 'Educarriere', url: 'https://emploi.educarriere.ci/', searchUrl: 'https://emploi.educarriere.ci/recherche?q=', logo: '🇨🇮', description: 'Le leader de l\'emploi en Côte d\'Ivoire' },
+    { name: 'Agence Emploi Jeunes', url: 'https://www.agenceemploijeunes.ci/site/offres-emplois', logo: '🎓', description: 'Portail officiel pour l\'insertion des jeunes' },
+    { name: 'RMO Job Center', url: 'https://www.rmo-jobcenter.com/fr/offres-emploi.html', logo: '🏢', description: 'Cabinet de recrutement de référence' }
+  ],
+  'SN': [
+    { name: 'Emploi Dakar', url: 'https://www.emploidakar.com/', searchUrl: 'https://www.emploidakar.com/?s=', logo: '🇸🇳', description: 'Premier site d\'emploi au Sénégal' },
+    { name: 'SenJob', url: 'https://www.senjob.com/', logo: '💼', description: 'Offres d\'emploi et stages au Sénégal' }
+  ],
+  'FR': [
+    { name: 'Welcome to the Jungle', url: 'https://www.welcometothejungle.com/fr', searchUrl: 'https://www.welcometothejungle.com/fr/jobs?query=', logo: '🇫🇷', description: 'Startups, Tech et entreprises modernes' },
+    { name: 'Indeed France', url: 'https://fr.indeed.com/', searchUrl: 'https://fr.indeed.com/emplois?q=', logo: '🔍', description: 'Le plus grand moteur de recherche' },
+    { name: 'LinkedIn Jobs', url: 'https://www.linkedin.com/jobs/', searchUrl: 'https://www.linkedin.com/jobs/search/?keywords=', logo: '🌐', description: 'Réseau professionnel incontournable' }
+  ],
+  'CM': [
+    { name: 'Emploi.cm', url: 'https://www.emploi.cm/', logo: '🇨🇲', description: 'Offres d\'emploi au Cameroun' },
+    { name: 'Mina Jobs', url: 'https://minajobs.net/', logo: '🤝', description: 'Recrutement et carrière' }
+  ],
+  'GLOBAL': [
+    { name: 'LinkedIn', url: 'https://www.linkedin.com/jobs/', logo: '🌍', description: 'Opportunités internationales' },
+    { name: 'JeuneAfrique Emploi', url: 'https://www.jeuneafrique.com/emploi/', logo: '📰', description: 'Carrières panafricaines' }
+  ]
+};
+
+const getCountryCode = (loc: string): string => {
+  const l = loc.toLowerCase();
+  if (l.includes('ivoire') || l.includes('abidjan') || l.includes('yamoussoukro')) return 'CI';
+  if (l.includes('sénégal') || l.includes('senegal') || l.includes('dakar')) return 'SN';
+  if (l.includes('france') || l.includes('paris') || l.includes('lyon') || l.includes('marseille')) return 'FR';
+  if (l.includes('cameroun') || l.includes('douala') || l.includes('yaounde')) return 'CM';
+  if (l.includes('canada') || l.includes('quebec') || l.includes('montreal')) return 'CA';
+  return 'GLOBAL';
+};
 
 export const JobsPage: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [location, setLocation] = useState('Dakar, Sénégal'); // Default detection mock
+  const [location, setLocation] = useState('Abidjan, Côte d\'Ivoire'); // Default to CI based on request
   const [isLoading, setIsLoading] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [detectedZone, setDetectedZone] = useState('GLOBAL');
+
+  useEffect(() => {
+    setDetectedZone(getCountryCode(location));
+  }, [location]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +161,41 @@ export const JobsPage: React.FC = () => {
 
         {hasSearched && (
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-fade-in">
+                
+                {/* --- SECTION PLATEFORMES LOCALES --- */}
+                <div className="lg:col-span-4">
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white mb-2 border border-slate-700 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2 relative z-10">
+                            <Globe className="text-blue-400" size={20} /> 
+                            Où postuler en <span className="text-blue-300">{detectedZone === 'GLOBAL' ? 'International' : location.split(',')[1] || location}</span> ?
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                            {(JOB_PORTALS[detectedZone] || JOB_PORTALS['GLOBAL']).map((portal) => (
+                                <a 
+                                    key={portal.name} 
+                                    href={portal.searchUrl ? `${portal.searchUrl}${encodeURIComponent(query)}` : portal.url}
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group"
+                                >
+                                    <span className="text-2xl">{portal.logo}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-sm group-hover:text-blue-300 transition truncate">{portal.name}</h4>
+                                        <p className="text-xs text-slate-400 truncate">{portal.description}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                      <ExternalLink size={14} className="text-slate-500 group-hover:text-white transition" />
+                                      <span className="text-[10px] text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition">Voir les offres</span>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Filters Sidebar */}
                 <div className="hidden lg:block space-y-8">
                     <div>

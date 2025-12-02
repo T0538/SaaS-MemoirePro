@@ -32,8 +32,16 @@ import {
   ArrowRight,
   Check,
   Home,
-  Upload, // Added Upload icon
-  File as FileIcon // Added File icon
+  Upload,
+  File as FileIcon,
+  Bold,
+  Italic,
+  List,
+  AlignLeft,
+  MoreHorizontal,
+  Share2,
+  Undo,
+  Redo
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom'; 
 
@@ -46,7 +54,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const navigate = useNavigate();
   const [activeChapterId, setActiveChapterId] = useState<string>(project.chapters[0]?.id || '');
   const [activeSectionId, setActiveSectionId] = useState<string>(project.chapters[0]?.sections[0]?.id || '');
-  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   
   // Export Menu State
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -57,7 +65,34 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [improveInstruction, setImproveInstruction] = useState('');
   const [showImproveInput, setShowImproveInput] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  const activeChapter = project.chapters.find(c => c.id === activeChapterId);
+  const activeSection = activeChapter?.sections.find(s => s.id === activeSectionId);
+
+  // Sync contentEditable with state when content changes externally (e.g. chapter switch)
+  useEffect(() => {
+      if (editorRef.current && activeSection) {
+          const currentContent = activeSection.content || "";
+          // Avoid cursor jumps if content is effectively the same
+          if (editorRef.current.innerHTML === currentContent) return;
+          
+          // Detect if content is HTML (has tags) or plain text to handle legacy/generated content
+          const isHTML = /<[a-z][\s\S]*>/i.test(currentContent);
+          
+          if (isHTML) {
+              editorRef.current.innerHTML = currentContent;
+          } else {
+              editorRef.current.innerText = currentContent;
+          }
+      }
+  }, [activeSectionId, activeChapterId, activeSection]);
+
+  // Toolbar Actions
+  const execCmd = (command: string, value: string | undefined = undefined) => {
+      document.execCommand(command, false, value);
+      editorRef.current?.focus();
+  };
 
   // BIBLIOGRAPHY STATE
   const [showBiblioPanel, setShowBiblioPanel] = useState(false);
@@ -73,7 +108,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   const [docQuery, setDocQuery] = useState('');
   const [docChatHistory, setDocChatHistory] = useState<{sender: 'user'|'ai', text: string}[]>([]);
   const [isDocLoading, setIsDocLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null); 
 
   // PLANNING COACH STATE
   const [showDateInput, setShowDateInput] = useState(false);
@@ -160,16 +195,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     }
   };
 
-  const activeChapter = project.chapters.find(c => c.id === activeChapterId);
-  const activeSection = activeChapter?.sections.find(s => s.id === activeSectionId);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [editorContent]);
+  // Auto-resize textarea - REMOVED for ContentEditable
+  // useEffect(() => {
+  //   if (textareaRef.current) {
+  //     textareaRef.current.style.height = 'auto';
+  //     textareaRef.current.style.height = Math.max(textareaRef.current.scrollHeight, 600) + 'px';
+  //   }
+  // }, [editorContent]);
 
   // Sync editor content when selection changes
   useEffect(() => {
@@ -182,7 +214,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
 
   // Helper to close sidebar on mobile when tool is selected
   const handleToolSelect = () => {
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < 1024) {
           setSidebarOpen(false);
       }
   };
@@ -204,8 +236,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Simulate reading PDF/DOCX (In real app, use pdf.js or mammoth.js)
-    // Here we read text files natively, and "pretend" to read others for UI demo
     const reader = new FileReader();
     
     reader.onload = (event) => {
@@ -222,8 +252,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
     if (file.type === "text/plain") {
       reader.readAsText(file);
     } else {
-      // For PDF/Word in this frontend-only demo, we simulate extraction
-      // or warn the user.
       alert("Note : L'extraction PDF/Word nécessite un serveur. Pour cette démo, un document vide est ajouté. Veuillez copier-coller le texte pour une analyse réelle.");
       const newDoc: SourceDoc = {
         id: Date.now().toString(),
@@ -234,7 +262,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
       setSourceDocs([...sourceDocs, newDoc]);
     }
     
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -511,39 +538,41 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
   };
 
   return (
-    <div className="flex h-[100dvh] bg-[#F3F4F6] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
+    <div className="flex h-[100dvh] bg-[#F8FAFC] overflow-hidden font-sans text-slate-900 fixed top-0 left-0 w-full z-50">
       
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[90] md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
-      {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-72'} transition-transform duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] fixed md:relative w-72 shadow-xl md:shadow-none`}>
-        <div className="p-4 h-16 border-b border-slate-100 flex justify-between items-center bg-emerald-900 text-white">
-            <div className="flex items-center gap-2 font-bold cursor-pointer" onDoubleClick={activateGodMode} title="Double-clic pour activer le mode Admin">
-                <FileText size={16} className="text-emerald-400"/>
-                <span className="truncate max-w-[150px]">Éditeur Pro</span>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 hover:bg-white/10 rounded"><ChevronLeft size={20} /></button>
+      {/* Sidebar Navigation */}
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-72'} transition-transform duration-300 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 z-[100] fixed lg:relative w-72 shadow-2xl lg:shadow-none`}>
+        <div className="p-4 h-16 border-b border-slate-100 flex justify-between items-center">
+            <Link to="/" className="flex items-center gap-2 font-bold text-emerald-900" title="Retour à l'accueil">
+                <div className="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center">
+                    <FileText size={18} />
+                </div>
+                <span className="text-lg tracking-tight">Mémoire<span className="text-emerald-600">Pro</span></span>
+            </Link>
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:bg-slate-100 rounded"><ChevronLeft size={20} /></button>
         </div>
 
         {/* FREE TIER BANNER */}
         {!isPremium && (
-            <div className="bg-emerald-50 p-4 border-b border-emerald-100">
-                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 mb-2">
+            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-2">
                     <span>Essai Gratuit</span>
-                    <span>{generationCount}/{MAX_FREE_GENERATIONS}</span>
+                    <span className={generationCount >= MAX_FREE_GENERATIONS ? "text-red-500" : "text-emerald-600"}>{generationCount}/{MAX_FREE_GENERATIONS}</span>
                 </div>
-                <div className="w-full bg-emerald-200 rounded-full h-1.5 mb-3">
-                    <div className="bg-emerald-600 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((generationCount/MAX_FREE_GENERATIONS)*100, 100)}%` }}></div>
+                <div className="w-full bg-slate-200 rounded-full h-1.5 mb-3 overflow-hidden">
+                    <div className={`h-1.5 rounded-full transition-all ${generationCount >= MAX_FREE_GENERATIONS ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${Math.min((generationCount/MAX_FREE_GENERATIONS)*100, 100)}%` }}></div>
                 </div>
-                <button onClick={() => navigate('/pricing')} className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
+                <button onClick={() => navigate('/pricing')} className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-sm shadow-emerald-200">
                     <CreditCard size={12} />
-                    Passer Pro (3$)
+                    Passer Premium
                 </button>
             </div>
         )}
@@ -551,12 +580,12 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         <div className="flex-1 overflow-y-auto p-3 space-y-6">
           
           {/* COACH PLANNING WIDGET */}
-          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                      <Calendar size={12} /> Coach Planning
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                      <Calendar size={12} /> Planning
                   </h4>
-                  {project.deadline && <span className="text-xs font-bold text-emerald-600">J-{stats.daysLeft}</span>}
+                  {project.deadline && <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">J-{stats.daysLeft}</span>}
               </div>
               
               {!project.deadline ? (
@@ -578,22 +607,22 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                   ) : (
                       <button 
                           onClick={() => setShowDateInput(true)} 
-                          className="w-full py-2 bg-white border border-dashed border-slate-300 text-slate-500 text-xs rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition"
+                          className="w-full py-2 bg-slate-50 border border-dashed border-slate-300 text-slate-500 text-xs rounded-lg hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition"
                       >
-                          + Définir ma date de rendu
+                          + Définir date de rendu
                       </button>
                   )
               ) : (
                   <div className="space-y-3">
                       <div>
                           <div className="flex justify-between text-xs mb-1">
-                              <span className="text-slate-500">Progression</span>
-                              <span className="font-bold text-slate-700">{stats.progress}%</span>
+                              <span className="text-slate-500">Objectif journalier</span>
+                              <span className="font-bold text-slate-700">{stats.dailyGoal} mots</span>
                           </div>
-                          <div className="w-full bg-slate-200 rounded-full h-1.5">
+                          <div className="w-full bg-slate-100 rounded-full h-1.5">
                               <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${stats.progress}%` }}></div>
                           </div>
-                          <p className="text-[10px] text-slate-400 mt-1 text-right">{stats.wordCount} / 10 000 mots</p>
+                          <p className="text-[10px] text-slate-400 mt-1 text-right">{stats.wordCount} / 10k mots</p>
                       </div>
                   </div>
               )}
@@ -602,39 +631,41 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
           {/* Outils Intelligents Section */}
           <div className="mb-4">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3 flex items-center gap-2">
-               <Wand2 size={12} /> Boîte à outils IA
+               <Wand2 size={12} /> Assistants IA
             </h4>
-            <div className="space-y-2">
-                 <button onClick={() => {handleExpand(); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Maximize2 size={16}/></div>
-                     Développer le texte
+            <div className="space-y-1">
+                 <button onClick={() => {handleExpand(); handleToolSelect();}} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 rounded-lg transition text-left group">
+                     <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 group-hover:border-emerald-200 group-hover:text-emerald-600 flex items-center justify-center transition-colors"><Maximize2 size={14}/></div>
+                     Développer
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={handleJuryClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Users size={16}/></div>
+                 <button onClick={handleJuryClick} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 rounded-lg transition text-left group">
+                     <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 group-hover:border-emerald-200 group-hover:text-emerald-600 flex items-center justify-center transition-colors"><Users size={14}/></div>
                      Simulateur Jury
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={handleBiblioClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Book size={16}/></div>
-                     Bibliographe IA
+                 <button onClick={handleBiblioClick} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 rounded-lg transition text-left group">
+                     <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 group-hover:border-emerald-200 group-hover:text-emerald-600 flex items-center justify-center transition-colors"><Book size={14}/></div>
+                     Bibliographe
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
-                 <button onClick={handleDocChatClick} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition text-left">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Search size={16}/></div>
-                     Chat avec Sources
+                 <button onClick={handleDocChatClick} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 rounded-lg transition text-left group">
+                     <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-500 group-hover:border-emerald-200 group-hover:text-emerald-600 flex items-center justify-center transition-colors"><Search size={14}/></div>
+                     Chat Sources
                      {!isPremium && <Lock size={12} className="ml-auto text-slate-300"/>}
                  </button>
             </div>
           </div>
 
           <div className="border-t border-slate-100 pt-4">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 pl-3">Structure du mémoire</h4>
             {project.chapters.map((chapter, idx) => (
                 <div key={chapter.id} className="mb-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pl-3 truncate" title={chapter.title}>
-                    {idx + 1}. {chapter.title}
-                </h4>
-                <ul className="space-y-0.5">
+                <h5 className="text-xs font-semibold text-slate-500 mb-2 pl-3 truncate flex items-center gap-2" title={chapter.title}>
+                    <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">{idx + 1}</span>
+                    {chapter.title}
+                </h5>
+                <ul className="space-y-0.5 pl-2 border-l border-slate-100 ml-5">
                     {chapter.sections.map((section) => {
                     const isActive = section.id === activeSectionId;
                     return (
@@ -645,14 +676,14 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                             setActiveSectionId(section.id);
                             handleToolSelect();
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-start gap-2 transition-all ${
+                            className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-all ${
                             isActive 
-                                ? 'bg-emerald-50 text-emerald-900 font-semibold shadow-sm' 
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                ? 'bg-emerald-50 text-emerald-900 font-medium border-l-2 border-emerald-500' 
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border-l-2 border-transparent'
                             }`}
                         >
-                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${section.status === 'completed' ? 'bg-emerald-500' : isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                            <span className="leading-tight">{section.title}</span>
+                            <span className="leading-tight truncate">{section.title}</span>
+                            {section.status === 'completed' && <CheckCircle size={12} className="text-emerald-500 ml-auto shrink-0"/>}
                         </button>
                         </li>
                     );
@@ -663,46 +694,204 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
           </div>
         </div>
         
-        {/* Footer Sidebar with Export Menu - RESTORED */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 relative">
-             <div className={`absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all origin-bottom duration-200 ${showExportMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}>
-                 <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-100">
-                     <div className="flex items-center gap-3">
-                        <FileText size={16} className="text-emerald-600" />
-                        <span>Word (.doc)</span>
-                     </div>
-                     {!isPremium && <Lock size={12} className="text-slate-400" />}
-                 </button>
-                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
-                     <Printer size={16} className="text-emerald-600" />
-                     <span>PDF (Impression)</span>
-                 </button>
-             </div>
-
+        {/* Footer Sidebar */}
+        <div className="p-4 border-t border-slate-200 bg-slate-50/50 text-center">
              <button 
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition shadow-sm"
+                onDoubleClick={activateGodMode}
+                className="text-[10px] text-slate-400 hover:text-slate-600 transition"
              >
-                <div className="flex items-center gap-2">
-                    <Download size={16} />
-                    Exporter
-                </div>
-                <ChevronUp size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                v2.4.0 • Pro Edition
              </button>
         </div>
       </div>
 
-      {/* BIBLIOGRAPHY PANEL OVERLAY - RESTORED */}
+      {/* Main Workspace */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative bg-[#F8FAFC]">
+        
+        {/* Top Application Bar */}
+        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 shrink-0 z-[30]">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className={`lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg shrink-0 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : ''}`}
+            >
+              <Menu size={20} />
+            </button>
+            
+            <div className="flex flex-col">
+               <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <span className="truncate max-w-[100px] lg:max-w-[200px] hidden sm:inline">{activeChapter?.title}</span>
+                  <span className="text-slate-300 hidden sm:inline">/</span>
+                  <span className="font-semibold text-slate-800 truncate max-w-[150px] lg:max-w-[300px]">{activeSection?.title}</span>
+               </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+             <div className="hidden sm:flex items-center gap-2 mr-4 text-xs font-medium text-slate-400">
+                {isGenerating ? (
+                   <span className="text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-2 py-1 rounded-full">
+                      <Sparkles size={12} className="animate-pulse" />
+                      Rédaction en cours...
+                   </span>
+                ) : (
+                   <span className="flex items-center gap-1.5">
+                     <Save size={12} />
+                     Enregistré
+                   </span>
+                )}
+             </div>
+
+             <div className="relative">
+                <button 
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition"
+                >
+                    <Download size={16} />
+                    <span className="hidden sm:inline">Exporter</span>
+                    <ChevronUp size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Export Dropdown */}
+                {showExportMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in">
+                        <button onClick={handleExportWord} className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition border-b border-slate-100">
+                            <div className="flex items-center gap-3">
+                            <FileText size={16} className="text-blue-600" />
+                            <span>Word (.doc)</span>
+                            </div>
+                            {!isPremium && <Lock size={12} className="text-slate-400" />}
+                        </button>
+                        <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition">
+                            <Printer size={16} className="text-red-500" />
+                            <span>PDF (Print)</span>
+                        </button>
+                    </div>
+                )}
+             </div>
+             
+             <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Partager">
+                 <Share2 size={18} />
+             </button>
+          </div>
+        </header>
+
+        {/* Editor Toolbar */}
+        <div className="h-12 bg-white border-b border-slate-300 flex items-center justify-center px-4 shrink-0 z-[29] shadow-sm sticky top-0">
+            <div className="flex items-center gap-1 text-slate-600">
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('undo')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Annuler"><Undo size={16}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('redo')} className="p-1.5 hover:bg-slate-100 rounded transition mr-3" title="Rétablir"><Redo size={16}/></button>
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('bold')} className="p-1.5 hover:bg-slate-100 rounded transition font-bold" title="Gras"><Bold size={16}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('italic')} className="p-1.5 hover:bg-slate-100 rounded transition italic" title="Italique"><Italic size={16}/></button>
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Liste à puces"><List size={16}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyLeft')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Aligner à gauche"><AlignLeft size={16}/></button>
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <button onMouseDown={(e) => e.preventDefault()} className="flex items-center gap-1 px-2 py-1 hover:bg-slate-100 rounded text-xs font-medium">Normal <ChevronUp size={12}/></button>
+            </div>
+        </div>
+
+        {/* Editor Area - Word Style */}
+        <div className="flex-1 overflow-y-auto relative bg-slate-200 p-8 md:p-12 flex justify-center" onClick={() => editorRef.current?.focus()}>
+           <div className="w-full flex flex-col items-center gap-6">
+              
+              {/* AI Assistant Bar - Floating */}
+              <div className="bg-white/90 backdrop-blur p-1.5 rounded-full shadow-md border border-emerald-100 flex items-center gap-2 mx-auto max-w-xl sticky top-4 z-[20] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                    <Sparkles size={14} />
+                 </div>
+                 {showImproveInput ? (
+                    <div className="flex-1 flex gap-2 items-center pr-1">
+                       <input 
+                         type="text"
+                         className="flex-1 text-sm outline-none text-slate-700 placeholder-slate-400 bg-transparent pl-2"
+                         placeholder="Instruction (ex: Plus formel...)"
+                         value={improveInstruction}
+                         onChange={(e) => setImproveInstruction(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
+                         autoFocus
+                       />
+                       <button 
+                         onClick={handleImprove}
+                         className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-black transition"
+                       >
+                         Go
+                       </button>
+                       <button onClick={() => setShowImproveInput(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"><X size={14}/></button>
+                    </div>
+                 ) : (
+                    <button 
+                       onClick={() => setShowImproveInput(true)}
+                       className="flex-1 text-left text-sm text-slate-500 hover:text-slate-800 transition px-2 truncate"
+                    >
+                       Demander à l'IA de réécrire ou améliorer...
+                    </button>
+                 )}
+              </div>
+
+              {/* Paper / Document Surface (A4 Ratio) */}
+              <div className="w-[21cm] min-h-[29.7cm] bg-white shadow-2xl relative cursor-text transition-all duration-300 print:shadow-none print:w-full print:h-auto">
+                 {/* Page Margins Visual */}
+                 
+                 {generationError && (
+                    <div className="absolute top-4 left-10 right-10 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2 z-10">
+                       <AlertCircle size={16} />
+                       {generationError}
+                    </div>
+                 )}
+                 
+                 <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={(e) => {
+                       const content = e.currentTarget.innerHTML; 
+                       setEditorContent(content);
+                       handleSaveContent(content, 'pending');
+                    }}
+                    className="w-full h-full outline-none text-slate-900 text-[11pt] leading-[1.6] font-serif px-[2.5cm] py-[2.5cm] selection:bg-emerald-100 selection:text-emerald-900"
+                    style={{ fontFamily: '"Times New Roman", Times, serif', minHeight: '29.7cm' }}
+                    spellCheck={false}
+                 />
+
+                 {!editorContent && !isGenerating && (
+                    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-full px-8 pointer-events-none">
+                       <div className="mb-6 text-slate-100">
+                           <FileText size={80} className="mx-auto" />
+                       </div>
+                       <h3 className="text-xl font-bold text-slate-300 mb-2">Page Vierge</h3>
+                       <p className="text-slate-300 mb-8 text-sm max-w-xs mx-auto">Commencez à rédiger ou utilisez l'Assistant IA pour générer du contenu.</p>
+                       
+                       <button 
+                          onClick={handleGenerate}
+                          className="pointer-events-auto group relative inline-flex items-center justify-center gap-3 px-6 py-3 font-bold text-white transition-all duration-200 bg-emerald-600 rounded-full focus:outline-none hover:bg-emerald-700 shadow-lg shadow-emerald-200 hover:-translate-y-1"
+                       >
+                          <Wand2 size={18} className="animate-pulse" />
+                          Générer avec l'IA
+                       </button>
+                    </div>
+                 )}
+              </div>
+              
+              <div className="text-center text-xs text-slate-400 pb-12 font-medium">
+                  Page 1 sur 1 • {stats.wordCount} mots
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* OVERLAYS (Biblio & Doc Chat) */}
+      {/* BIBLIOGRAPHY PANEL OVERLAY */}
       {showBiblioPanel && (
          <div className="absolute inset-0 z-[110] flex justify-end">
-             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowBiblioPanel(false)}></div>
-             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
-                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                     <div className="flex items-center gap-2 font-bold text-slate-800 text-lg">
-                         <Book className="text-emerald-600" />
-                         Bibliographe Express
+             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowBiblioPanel(false)}></div>
+             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-slide-in-right flex flex-col">
+                 <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                     <div className="flex items-center gap-2 font-bold text-slate-800">
+                         <Book className="text-emerald-600" size={20} />
+                         Bibliographe
                      </div>
-                     <button onClick={() => setShowBiblioPanel(false)} className="text-slate-400 hover:text-slate-700"><X /></button>
+                     <button onClick={() => setShowBiblioPanel(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><X size={18}/></button>
                  </div>
 
                  <div className="p-6 flex-1 overflow-y-auto">
@@ -776,17 +965,17 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
          </div>
       )}
 
-      {/* DOC CHAT PANEL OVERLAY - RESTORED */}
+      {/* DOC CHAT PANEL OVERLAY */}
       {showDocPanel && (
          <div className="absolute inset-0 z-[110] flex justify-end">
-             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowDocPanel(false)}></div>
-             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-fade-in flex flex-col">
-                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                     <div className="flex items-center gap-2 font-bold text-slate-800 text-lg">
-                         <Search className="text-emerald-600" />
+             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowDocPanel(false)}></div>
+             <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-slide-in-right flex flex-col">
+                 <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                     <div className="flex items-center gap-2 font-bold text-slate-800">
+                         <Search className="text-emerald-600" size={20} />
                          Chat avec Sources
                      </div>
-                     <button onClick={() => setShowDocPanel(false)} className="text-slate-400 hover:text-slate-700"><X /></button>
+                     <button onClick={() => setShowDocPanel(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><X size={18}/></button>
                  </div>
 
                  <div className="flex-1 flex flex-col overflow-hidden">
@@ -811,7 +1000,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                             />
                             <button 
                                 onClick={() => fileInputRef.current?.click()} 
-                                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded mb-2 flex items-center justify-center gap-2 border border-slate-200"
+                                className="w-full py-2 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold rounded mb-2 flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
                             >
                                 <Upload size={14} /> Importer un fichier
                             </button>
@@ -850,13 +1039,13 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                         )}
                         {docChatHistory.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}>
+                                <div className={`max-w-[85%] p-3 rounded-xl text-sm ${msg.sender === 'user' ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none'}`}>
                                     {msg.text}
                                 </div>
                             </div>
                         ))}
                         {isDocLoading && (
-                            <div className="flex justify-start"><div className="bg-slate-100 p-3 rounded-xl text-sm text-slate-500">Analyse en cours...</div></div>
+                            <div className="flex justify-start"><div className="bg-slate-100 p-3 rounded-xl text-sm text-slate-500 animate-pulse">Analyse en cours...</div></div>
                         )}
                     </div>
 
@@ -879,134 +1068,6 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
              </div>
          </div>
       )}
-
-
-      {/* Main Workspace */}
-      <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        
-        {/* Top Bar - Optimized Text Layout */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-[30]">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className={`md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg shrink-0 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : ''}`}
-            >
-              <Menu size={20} />
-            </button>
-            
-            {/* Text Container with min-w-0 for truncation */}
-            <div className="flex flex-col min-w-0 justify-center">
-               <div className="flex items-center gap-1 text-[10px] md:text-xs text-slate-400 uppercase tracking-wider font-bold truncate leading-none mb-0.5">
-                  <span className="truncate">{activeChapter?.title || 'Chapitre'}</span>
-                  <ChevronRight size={10} className="shrink-0" />
-                  <span className="text-emerald-600 truncate">Section</span>
-               </div>
-               <div className="flex items-center gap-2 min-w-0">
-                 {activeSection?.status === 'completed' && <CheckCircle size={14} className="text-emerald-500 shrink-0"/>}
-                 <span className="font-bold text-slate-800 text-sm md:text-base truncate" title={activeSection?.title}>
-                   {activeSection?.title || 'Titre de la section'}
-                 </span>
-               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0 ml-2">
-             {/* Home Button - NEW */}
-             <Link to="/" className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Retour à l'accueil">
-                 <Home size={18} />
-             </Link>
-
-             <div className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                {isGenerating ? (
-                   <span className="text-emerald-600 flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
-                      <span className="hidden sm:inline">Rédaction...</span>
-                   </span>
-                ) : (
-                   <>
-                     <Save size={12} />
-                     <span className="hidden sm:inline">Enregistré</span>
-                   </>
-                )}
-             </div>
-          </div>
-        </header>
-
-        {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto relative bg-slate-100/50 pt-20 md:pt-0">
-           <div className="max-w-3xl mx-auto py-8 px-4 md:py-12 md:px-12 min-h-full flex flex-col">
-              
-              {/* Humanizer Bar */}
-              <div className="mb-6 bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-2 sticky top-0 z-[20]">
-                 <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                    <Sparkles size={16} />
-                 </div>
-                 {showImproveInput ? (
-                    <div className="flex-1 flex gap-2">
-                       <input 
-                         type="text"
-                         className="flex-1 text-sm outline-none text-slate-700 placeholder-slate-400 bg-transparent"
-                         placeholder="Ex: Rends le ton plus formel..."
-                         value={improveInstruction}
-                         onChange={(e) => setImproveInstruction(e.target.value)}
-                         onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
-                         autoFocus
-                       />
-                       <button 
-                         onClick={handleImprove}
-                         className="bg-emerald-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-emerald-700"
-                       >
-                         Go
-                       </button>
-                       <button onClick={() => setShowImproveInput(false)} className="p-1 text-slate-400 hover:text-slate-600"><X size={14}/></button>
-                    </div>
-                 ) : (
-                    <button 
-                       onClick={() => setShowImproveInput(true)}
-                       className="flex-1 text-left text-sm text-slate-400 hover:text-slate-600 transition"
-                    >
-                       Demander à l'IA d'améliorer ou reformuler...
-                    </button>
-                 )}
-              </div>
-
-              {/* Paper */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[60vh] p-6 md:p-16 relative cursor-text" onClick={() => textareaRef.current?.focus()}>
-                 {generationError && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2">
-                       <AlertCircle size={16} />
-                       {generationError}
-                    </div>
-                 )}
-                 
-                 <textarea
-                    ref={textareaRef}
-                    value={editorContent}
-                    onChange={(e) => {
-                       setEditorContent(e.target.value);
-                       handleSaveContent(e.target.value, 'pending');
-                    }}
-                    className="w-full h-full resize-none outline-none text-slate-800 text-lg leading-relaxed font-serif placeholder-slate-300 bg-transparent overflow-hidden"
-                    placeholder="Commencez à écrire ou utilisez 'Générer'..."
-                    spellCheck={false}
-                 />
-
-                 {!editorContent && !isGenerating && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-full px-4">
-                       <button 
-                          onClick={handleGenerate}
-                          className="group relative inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 font-bold text-white transition-all duration-200 bg-emerald-900 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-900 hover:bg-emerald-600 shadow-xl hover:shadow-2xl hover:-translate-y-1 w-full md:w-auto"
-                       >
-                          <Wand2 size={20} className="animate-pulse" />
-                          Générer cette section
-                       </button>
-                       <p className="mt-4 text-xs md:text-sm text-slate-400">L'IA va rédiger environ 400 mots basés sur votre plan.</p>
-                    </div>
-                 )}
-              </div>
-           </div>
-        </div>
-      </div>
     </div>
   );
 };
