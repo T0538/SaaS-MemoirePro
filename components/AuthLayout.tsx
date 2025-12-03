@@ -22,7 +22,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white relative z-10">
         <div className="absolute top-8 left-8 lg:left-24">
           <Link to="/" className="flex items-center gap-2 text-slate-900 group">
-            <div className="bg-slate-900 text-white p-1.5 rounded-lg group-hover:bg-emerald-600 transition-colors">
+            <div className="bg-slate-900 text-white p-1.5 rounded-lg group-hover:bg-blue-600 transition-colors">
               <GraduationCap size={20} />
             </div>
             <span className="text-lg font-serif font-bold tracking-tight">MémoirePro</span>
@@ -50,10 +50,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           src={image}
           alt="Étudiants travaillant"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-emerald-900/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-blue-900/40"></div>
         
         <div className="absolute bottom-0 left-0 w-full p-20 text-white z-20">
-          <div className="mb-6 text-emerald-400 flex items-center gap-2 font-bold uppercase tracking-widest text-xs">
+          <div className="mb-6 text-blue-400 flex items-center gap-2 font-bold uppercase tracking-widest text-xs">
             <CheckCircle size={16} />
             Validé par 5000+ étudiants
           </div>
@@ -68,7 +68,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             />
             <div>
               <div className="font-bold text-white">Clara M.</div>
-              <div className="text-emerald-200 text-sm">Master 2 Droit des Affaires, Sorbonne</div>
+              <div className="text-blue-200 text-sm">Master 2 Droit des Affaires, Sorbonne</div>
             </div>
           </div>
         </div>

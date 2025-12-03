@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight } from 'lucide-react';
+import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, LogOut, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -35,30 +35,35 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 transition-all duration-300 font-sans shadow-md">
+    <header className="sticky top-0 z-50 transition-all duration-300 font-sans shadow-lg">
       
-      {/* TOP BAR : Logo | Search | Auth - BLUE BACKGROUND */}
-      <div className="bg-slate-900 border-b border-slate-800 py-3 px-6 text-white">
-         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      {/* TOP BAR : Logo | Search | Auth - FANTASY & HUMANIZED */}
+      <div className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 py-4 px-6 text-white relative overflow-hidden">
+         
+         {/* Decorative Glow */}
+         <div className="absolute top-[-50%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] pointer-events-none mix-blend-screen animate-pulse"></div>
+
+         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative z-10">
             
-            {/* Logo */}
+            {/* Logo - Fantaisiste */}
             <Link to="/" className="flex items-center gap-3 group shrink-0">
-                <div className="bg-white text-blue-900 p-2 rounded-xl transition-all duration-300 shadow-md group-hover:scale-105">
-                    <GraduationCap size={24} />
+                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-2xl transition-all duration-500 shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3">
+                    <GraduationCap size={24} className="text-white" />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-lg font-serif font-bold tracking-tight leading-none text-white group-hover:text-blue-200 transition-colors">Nexia</span>
+                    <span className="text-2xl font-serif font-bold tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200 group-hover:to-blue-400 transition-all">Nexia</span>
                 </div>
             </Link>
 
-            {/* Search Bar (Desktop Only) - Semi-transparent */}
+            {/* Search Bar (Desktop Only) - Humanized */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
-                <form onSubmit={handleSearch} className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-300" size={18} />
+                <form onSubmit={handleSearch} className="relative w-full group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 group-hover:text-blue-200 transition-colors" size={18} />
                     <input 
                         type="text"
                         placeholder="Rechercher un guide, un outil..."
-                        className="w-full bg-slate-800/50 border border-slate-700 rounded-full py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-400/70 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-slate-800 transition-all"
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-full py-3 pl-12 pr-6 text-sm text-white placeholder-slate-400/70 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:bg-slate-800/80 transition-all shadow-inner"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -66,32 +71,37 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Auth & Mobile Toggle */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
                 <div className="hidden lg:flex items-center gap-3">
                     {user ? (
                         <div className="relative group">
                             <button 
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2.5 text-sm font-bold text-blue-100 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-full transition-all shadow-sm"
+                                className="flex items-center gap-3 text-sm font-bold text-blue-100 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 px-2 py-1.5 pr-4 rounded-full transition-all shadow-sm hover:shadow-md hover:border-blue-500/30"
                             >
-                                <div className="w-8 h-8 bg-blue-700 text-white rounded-full flex items-center justify-center border border-blue-600">
+                                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center border-2 border-slate-900 shadow-lg">
                                     <User size={16} />
                                 </div>
                                 <span className="max-w-[100px] truncate">{user.name || 'Compte'}</span>
-                                <ChevronDown size={14} />
+                                <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />
                             </button>
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 z-50 text-slate-800">
-                                <Link to="/app" className="block px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 font-medium">Accéder à l'App</Link>
-                                <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-slate-50">Déconnexion</button>
+                            <div className="absolute right-0 top-full mt-4 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 text-slate-800 origin-top-right">
+                                <Link to="/app" className="flex items-center gap-3 px-5 py-3.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors">
+                                    <Layout size={16} className="text-blue-400" /> Accéder à l'App
+                                </Link>
+                                <div className="h-px bg-slate-100 mx-4 my-1"></div>
+                                <button onClick={handleLogout} className="w-full flex items-center gap-3 text-left px-5 py-3.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors">
+                                    <LogOut size={16} /> Déconnexion
+                                </button>
                             </div>
                         </div>
                     ) : (
                         <>
-                            <Link to="/login" className="text-sm font-bold text-blue-100 hover:text-white px-4 py-2 rounded-full hover:bg-slate-800 transition-colors">
+                            <Link to="/login" className="text-sm font-bold text-blue-200 hover:text-white px-5 py-2.5 rounded-full hover:bg-slate-800/50 transition-all">
                                 Connexion
                             </Link>
-                            <Link to="/signup" className="inline-flex items-center justify-center px-5 py-2 text-sm font-bold text-slate-900 transition-all duration-200 bg-white rounded-full hover:bg-blue-50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                                Démarrer
+                            <Link to="/signup" className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 transform border border-blue-500/50">
+                                Démarrer <ArrowRight size={16} className="ml-2" />
                             </Link>
                         </>
                     )}
@@ -99,9 +109,9 @@ export const Header: React.FC = () => {
 
                 <button 
                     onClick={() => setIsMobileMenuOpen(true)}
-                    className="lg:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                    className="lg:hidden p-2.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
                 >
-                    <Menu size={24} />
+                    <Menu size={26} />
                 </button>
             </div>
          </div>
@@ -367,24 +377,45 @@ export const Header: React.FC = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-white z-40 pt-24 px-6 lg:hidden animate-fade-in flex flex-col h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-white z-[9999] lg:hidden animate-fade-in flex flex-col h-[100dvh]">
           
-          {/* Mobile Search */}
-          <div className="mb-6">
-             <form onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false); }} className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          {/* Mobile Menu Header */}
+          <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+             <div className="flex items-center gap-2">
+                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl">
+                    <GraduationCap size={20} className="text-white" />
+                </div>
+                <span className="text-xl font-serif font-bold text-slate-900">Nexia</span>
+             </div>
+             <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+             >
+                <X size={24} />
+             </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 pb-40 safe-area-bottom">
+            {/* Mobile Search */}
+            <div className="mb-8">
+             <form onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false); }} className="relative group">
+                <div className="absolute inset-0 bg-blue-100 rounded-xl blur opacity-20 group-focus-within:opacity-50 transition-opacity"></div>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input 
                   type="text"
-                  placeholder="Rechercher..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Rechercher un guide..."
+                  className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
              </form>
-          </div>
+            </div>
 
-          <nav className="flex flex-col gap-2 text-lg font-medium text-slate-800">
-            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-4 border-b border-slate-100">Accueil</Link>
+            <nav className="flex flex-col gap-2 text-lg font-medium text-slate-800">
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="py-4 border-b border-slate-100 flex items-center justify-between group">
+                <span>Accueil</span>
+                <ChevronDown size={20} className="-rotate-90 text-slate-300 group-hover:text-blue-500 transition-colors" />
+            </Link>
             
             {/* Mobile Accordions */}
              <div className="border-b border-slate-100 py-4">
@@ -394,13 +425,16 @@ export const Header: React.FC = () => {
                {isFeaturesOpen && (
                  <div className="mt-4 flex flex-col gap-3 pl-2">
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
-                        <div className="bg-blue-100 p-1.5 rounded text-blue-600"><PenTool size={16} /></div> Rédaction & Plan
-                    </Link>
-                    <Link to="/jury" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 text-sm text-slate-600 bg-white border border-blue-100">
-                        <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Users size={16} /></div> Simulateur Jury
+                        <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Layout size={16} /></div> Générateur de Plan
                     </Link>
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
-                        <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Book size={16} /></div> Bibliographe
+                        <div className="bg-amber-100 p-1.5 rounded text-amber-600"><Sparkles size={16} /></div> Idées de Sujets
+                    </Link>
+                    <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-teal-100 p-1.5 rounded text-teal-600"><Search size={16} /></div> Recherche Sources
+                    </Link>
+                    <Link to="/jury" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 text-sm text-slate-600 bg-white border border-blue-100">
+                        <div className="bg-indigo-100 p-1.5 rounded text-indigo-600"><Users size={16} /></div> Simulateur Jury
                     </Link>
                  </div>
                )}
@@ -417,6 +451,12 @@ export const Header: React.FC = () => {
                     </Link>
                     <Link to="/destinations/europe" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Globe2 size={16} /></div> Europe
+                    </Link>
+                    <Link to="/destinations/africa" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-amber-100 p-1.5 rounded text-amber-600"><Globe2 size={16} /></div> Afrique
+                    </Link>
+                    <Link to="/destinations/canada" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-red-100 p-1.5 rounded text-red-600"><Globe2 size={16} /></div> Canada
                     </Link>
                  </div>
                )}
@@ -448,8 +488,9 @@ export const Header: React.FC = () => {
             <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="py-4 border-b border-slate-100">Tarifs</Link>
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="py-4 border-b border-slate-100">Contact</Link>
           </nav>
-
-          <div className="mt-auto pb-8 space-y-4">
+          
+          {/* Bottom Actions */}
+          <div className="mt-8 space-y-4">
             {user ? (
               <>
                  <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="w-full flex items-center justify-center px-6 py-4 text-lg font-bold text-white transition-all duration-200 bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg">
@@ -470,7 +511,8 @@ export const Header: React.FC = () => {
               </>
             )}
           </div>
-        </div>
+          </div>
+      </div>
       )}
     </header>
   );

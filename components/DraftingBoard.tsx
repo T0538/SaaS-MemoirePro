@@ -41,7 +41,16 @@ import {
   MoreHorizontal,
   Share2,
   Undo,
-  Redo
+  Redo,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Underline,
+  Type,
+  Heading1,
+  ListOrdered,
+  Indent,
+  Outdent
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom'; 
 
@@ -777,27 +786,76 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
         </header>
 
         {/* Editor Toolbar */}
-        <div className="h-12 bg-white border-b border-slate-300 flex items-center justify-center px-4 shrink-0 z-[29] shadow-sm sticky top-0">
-            <div className="flex items-center gap-1 text-slate-600">
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('undo')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Annuler"><Undo size={16}/></button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('redo')} className="p-1.5 hover:bg-slate-100 rounded transition mr-3" title="Rétablir"><Redo size={16}/></button>
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('bold')} className="p-1.5 hover:bg-slate-100 rounded transition font-bold" title="Gras"><Bold size={16}/></button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('italic')} className="p-1.5 hover:bg-slate-100 rounded transition italic" title="Italique"><Italic size={16}/></button>
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Liste à puces"><List size={16}/></button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyLeft')} className="p-1.5 hover:bg-slate-100 rounded transition" title="Aligner à gauche"><AlignLeft size={16}/></button>
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <button onMouseDown={(e) => e.preventDefault()} className="flex items-center gap-1 px-2 py-1 hover:bg-slate-100 rounded text-xs font-medium">Normal <ChevronUp size={12}/></button>
+        <div className="h-14 bg-white border-b border-slate-300 flex items-center gap-2 md:gap-4 px-2 md:px-4 shrink-0 z-[29] shadow-sm sticky top-0 overflow-x-auto no-scrollbar">
+            {/* History */}
+            <div className="flex items-center gap-1">
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('undo')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Annuler"><Undo size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('redo')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Rétablir"><Redo size={18}/></button>
+            </div>
+            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
+
+            {/* Fonts */}
+            <div className="flex items-center gap-2">
+                <select 
+                    onChange={(e) => execCmd('fontName', e.target.value)} 
+                    className="h-8 px-2 border border-slate-200 rounded text-sm text-slate-700 focus:border-emerald-500 focus:outline-none w-32"
+                    defaultValue="Times New Roman"
+                >
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Calibri">Calibri</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Courier New">Courier New</option>
+                </select>
+                <select 
+                    onChange={(e) => execCmd('fontSize', e.target.value)} 
+                    className="h-8 px-2 border border-slate-200 rounded text-sm text-slate-700 focus:border-emerald-500 focus:outline-none w-16"
+                    defaultValue="3"
+                >
+                    <option value="1">10</option>
+                    <option value="2">13</option>
+                    <option value="3">16</option>
+                    <option value="4">18</option>
+                    <option value="5">24</option>
+                    <option value="6">32</option>
+                    <option value="7">48</option>
+                </select>
+            </div>
+            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
+
+            {/* Formatting */}
+            <div className="flex items-center gap-1">
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('bold')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition font-bold" title="Gras"><Bold size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('italic')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition italic" title="Italique"><Italic size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('underline')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition underline" title="Souligné"><Underline size={18}/></button>
+            </div>
+            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
+
+            {/* Alignment */}
+            <div className="flex items-center gap-1">
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyLeft')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Aligner à gauche"><AlignLeft size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyCenter')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Centrer"><AlignCenter size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyRight')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Aligner à droite"><AlignRight size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyFull')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Justifier"><AlignJustify size={18}/></button>
+            </div>
+            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
+
+            {/* Lists */}
+            <div className="flex items-center gap-1">
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('insertUnorderedList')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Liste à puces"><List size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('insertOrderedList')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Liste numérotée"><ListOrdered size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('outdent')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Désindenter"><Outdent size={18}/></button>
+                <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('indent')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600 transition" title="Indenter"><Indent size={18}/></button>
             </div>
         </div>
 
         {/* Editor Area - Word Style */}
-        <div className="flex-1 overflow-y-auto relative bg-slate-200 p-8 md:p-12 flex justify-center" onClick={() => editorRef.current?.focus()}>
-           <div className="w-full flex flex-col items-center gap-6">
+        <div className="flex-1 overflow-y-auto relative bg-slate-200 p-4 md:p-8 lg:p-12 flex justify-center pb-[50vh]" onClick={() => editorRef.current?.focus()}>
+           <div className="w-full flex flex-col items-center gap-4 md:gap-6">
               
               {/* AI Assistant Bar - Floating */}
-              <div className="bg-white/90 backdrop-blur p-1.5 rounded-full shadow-md border border-emerald-100 flex items-center gap-2 mx-auto max-w-xl sticky top-4 z-[20] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-white/90 backdrop-blur p-1.5 rounded-full shadow-md border border-emerald-100 flex items-center gap-2 mx-auto w-full max-w-xl sticky top-2 md:top-4 z-[20] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <Sparkles size={14} />
                  </div>
@@ -831,7 +889,12 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
               </div>
 
               {/* Paper / Document Surface (A4 Ratio) */}
-              <div className="w-[21cm] min-h-[29.7cm] bg-white shadow-2xl relative cursor-text transition-all duration-300 print:shadow-none print:w-full print:h-auto">
+              <div className="w-full md:w-[21cm] min-h-[50vh] md:min-h-[29.7cm] bg-white shadow-2xl relative cursor-text transition-all duration-300 print:shadow-none print:w-full print:h-auto mx-auto"
+                   style={{
+                       backgroundImage: 'linear-gradient(to bottom, white 0px, white 29.7cm, #e2e8f0 29.7cm, #e2e8f0 30.5cm)',
+                       backgroundSize: '100% 30.5cm'
+                   }}
+              >
                  {/* Page Margins Visual */}
                  
                  {generationError && (
@@ -849,7 +912,7 @@ export const DraftingBoard: React.FC<DraftingBoardProps> = ({ project, onUpdateP
                        setEditorContent(content);
                        handleSaveContent(content, 'pending');
                     }}
-                    className="w-full h-full outline-none text-slate-900 text-[11pt] leading-[1.6] font-serif px-[2.5cm] py-[2.5cm] selection:bg-emerald-100 selection:text-emerald-900"
+                    className="w-full min-h-full h-auto outline-none text-slate-900 text-[11pt] leading-[1.6] font-serif px-[2.5cm] py-[2.5cm] selection:bg-emerald-100 selection:text-emerald-900"
                     style={{ fontFamily: '"Times New Roman", Times, serif', minHeight: '29.7cm' }}
                     spellCheck={false}
                  />
