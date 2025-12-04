@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { analyzeCV, generateCoverLetter } from '../services/geminiService';
-import { FileText, PenTool, CheckCircle, Loader2, AlertCircle, Upload, ChevronRight, Sparkles, Briefcase, Award, X } from 'lucide-react';
+import { FileText, PenTool, CheckCircle, Loader2, AlertCircle, Upload, ChevronRight, Sparkles, Briefcase, Award, X, Target } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 
@@ -328,6 +328,17 @@ export const CoachingPage: React.FC = () => {
                             ))}
                           </ul>
                         </div>
+                      </div>
+
+                      <div className="mt-6 bg-purple-50 rounded-xl p-6 border border-purple-100">
+                         <h4 className="font-bold text-purple-800 mb-4 flex items-center gap-2"><Target size={18}/> Mots-clés ATS & Compétences Clés</h4>
+                         <div className="flex flex-wrap gap-2">
+                            {result.keywords && result.keywords.map((keyword: string, idx: number) => (
+                              <span key={idx} className="px-3 py-1 bg-white text-purple-700 text-sm font-bold border border-purple-200 rounded-full shadow-sm">
+                                {keyword}
+                              </span>
+                            ))}
+                         </div>
                       </div>
 
                       <div className="mt-6 bg-blue-50 rounded-xl p-6 border border-blue-100">

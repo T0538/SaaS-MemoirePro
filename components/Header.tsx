@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, LogOut, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, LogOut, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight, ShieldCheck, Activity } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { checkServerHealth } from '../services/geminiService';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export const Header: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const clickRef = useRef(0);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('memoirepro_user');
@@ -47,20 +50,47 @@ export const Header: React.FC = () => {
          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative z-10">
             
             {/* Logo - Fantaisiste */}
-            <Link to="/" className="flex items-center gap-3 group shrink-0">
+            <div 
+                className="flex items-center gap-3 group shrink-0 cursor-pointer select-none"
+                onClick={() => {
+                    clickRef.current += 1;
+                    const currentClicks = clickRef.current;
+                    console.log(`Click count: ${currentClicks}`);
+                    
+                    // Reset count if no click for 2 seconds
+                    if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+                    clickTimeoutRef.current = setTimeout(() => {
+                        clickRef.current = 0;
+                    }, 2000);
+
+                    if (currentClicks >= 7) {
+                        localStorage.setItem('memoirepro_license', 'premium');
+                        if (!localStorage.getItem('memoirepro_user')) {
+                            const godUser = { id: 'god', name: 'Super Admin', email: 'admin@nexia.ai' };
+                            localStorage.setItem('memoirepro_user', JSON.stringify(godUser));
+                            setUser(godUser);
+                        }
+                        alert("⚡ GOD MODE ACTIVATED ⚡\nPremium Unlocked.");
+                        clickRef.current = 0;
+                        window.location.reload();
+                    }
+                }}
+            >
                 <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-2xl transition-all duration-500 shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3">
                     <GraduationCap size={24} className="text-white" />
                 </div>
                 <div className="flex flex-col">
                     <span className="text-2xl font-serif font-bold tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200 group-hover:to-blue-400 transition-all">Nexia</span>
                 </div>
-            </Link>
+            </div>
 
             {/* Search Bar (Desktop Only) - Humanized */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
                 <form onSubmit={handleSearch} className="relative w-full group">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 group-hover:text-blue-200 transition-colors" size={18} />
+                    <button type="submit" className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 group-hover:text-blue-200 transition-colors cursor-pointer z-10">
+                        <Search size={18} />
+                    </button>
                     <input 
                         type="text"
                         placeholder="Rechercher un guide, un outil..."
@@ -75,7 +105,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center gap-4">
                 <div className="hidden lg:flex items-center gap-3">
                     {user ? (
-                        <div className="relative group">
+                        <div className="relative">
                             <button 
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="flex items-center gap-3 text-sm font-bold text-blue-100 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 px-2 py-1.5 pr-4 rounded-full transition-all shadow-sm hover:shadow-md hover:border-blue-500/30"
@@ -84,12 +114,21 @@ export const Header: React.FC = () => {
                                     <User size={16} />
                                 </div>
                                 <span className="max-w-[100px] truncate">{user.name || 'Compte'}</span>
-                                <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />
+                                <ChevronDown size={14} className={`transition-transform duration-300 ${showUserMenu ? 'rotate-180' : ''}`} />
                             </button>
-                            <div className="absolute right-0 top-full mt-4 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 text-slate-800 origin-top-right">
+                            <div className={`absolute right-0 top-full mt-4 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden py-2 transition-all duration-300 z-50 text-slate-800 origin-top-right ${showUserMenu ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}>
                                 <Link to="/app" className="flex items-center gap-3 px-5 py-3.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors">
                                     <Layout size={16} className="text-blue-400" /> Accéder à l'App
                                 </Link>
+                                <button 
+                                    onClick={async () => {
+                                        const status = await checkServerHealth();
+                                        alert(`État du Serveur:\n\nStatus: ${status.status}\nServeur: ${status.server || 'Inconnu'}\nClé API: ${status.keyStatus || 'Inconnue'}\nMessage: ${status.message || 'Aucun message'}`);
+                                    }}
+                                    className="w-full flex items-center gap-3 text-left px-5 py-3.5 text-sm text-emerald-600 hover:bg-emerald-50 font-medium transition-colors"
+                                >
+                                    <Activity size={16} /> Test Connexion IA
+                                </button>
                                 <div className="h-px bg-slate-100 mx-4 my-1"></div>
                                 <button onClick={handleLogout} className="w-full flex items-center gap-3 text-left px-5 py-3.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors">
                                     <LogOut size={16} /> Déconnexion

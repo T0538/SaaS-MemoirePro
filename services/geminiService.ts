@@ -91,6 +91,14 @@ const runWithRetry = async <T>(operation: () => Promise<T>, retries = 3, delay =
   }
 };
 
+export const checkServerHealth = async (): Promise<any> => {
+  try {
+    return await postAI('checkHealth', {});
+  } catch (e: any) {
+    return { status: 'ERROR', message: e.message };
+  }
+};
+
 // --- FONCTIONS DE GÉNÉRATION ---
 
 export interface TopicIdea {
@@ -520,35 +528,45 @@ export interface CVAnalysisResult {
   strengths: string[];
   weaknesses: string[];
   improvements: string[];
+  keywords: string[]; // Added keywords
 }
 
 export const analyzeCV = async (cvText: string, targetJob: string): Promise<CVAnalysisResult> => {
   const prompt = `
-    RÔLE : Expert en Recrutement International (Type McKinsey/Google).
+    RÔLE : Expert en Recrutement International Senior (Ex-DRH Google/McKinsey).
     CV DU CANDIDAT (Texte brut) : "${cvText.substring(0, 8000)}"
     POSTE VISÉ : "${targetJob}"
 
     MISSION : 
-    Réalise un audit professionnel de ce CV. Sois direct, précis et constructif.
-    PAS DE LANGUE DE BOIS. PAS DE GÉNÉRALITÉS.
+    Réalise un audit impitoyable et constructif du CV pour maximiser les chances d'entretien.
+    Ton analyse doit être chirurgicale, orientée vers l'action et l'optimisation ATS (Applicant Tracking Systems).
 
-    INSTRUCTIONS STRICTES DE STYLE :
-    1. INTERDIT D'UTILISER LE GRAS MARKDOWN (les étoiles **).
-    2. INTERDIT D'UTILISER LES PUCES MARKDOWN (* ou -) DANS LE TEXTE JSON.
-    3. Utilise un langage professionnel, corporatif et percutant.
+    INSTRUCTIONS STRICTES :
+    1. **TON** : Professionnel, direct, sans complaisance mais encourageant.
+    2. **FORMAT** : JSON UNIQUEMENT. Pas de markdown, pas de texte avant/après.
+    3. **CONTENU** :
+       - Score : Évalue la pertinence pour le poste visé (0-100).
+       - Résumé : Une synthèse percutante du profil (3 phrases).
+       - Points Forts : Ce qui vend le candidat.
+       - Points Faibles : Ce qui tue la candidature (fautes, flou, manque de résultats).
+       - Améliorations : Actions CONCRÈTES (ex: "Remplacer 'géré' par 'piloté un budget de 50k€'").
+       - Mots-clés : Les 5-7 mots-clés ATS manquants ou présents cruciaux pour ce poste.
 
-    FORMAT DE SORTIE (JSON UNIQUEMENT) :
+    FORMAT DE SORTIE (JSON) :
     {
-      "score": (Nombre entre 0 et 100),
-      "summary": "Un paragraphe exécutif résumant le profil en 3 phrases max.",
-      "strengths": ["Point fort 1 (bref)", "Point fort 2", "Point fort 3"],
-      "weaknesses": ["Point faible 1 (critique)", "Point faible 2"],
-      "improvements": ["Action concrète 1", "Action concrète 2", "Action concrète 3"]
+      "score": 85,
+      "summary": "...",
+      "strengths": ["...", "..."],
+      "weaknesses": ["...", "..."],
+      "improvements": ["...", "..."],
+      "keywords": ["...", "..."]
     }
   `;
 
   try {
     const data = await postAI('analyzeCV', { prompt });
+    // Ensure keywords exists if API returns old format somehow, though we prompt for it.
+    if (!data.keywords) data.keywords = []; 
     return data as CVAnalysisResult;
 
   } catch (error) {
@@ -559,29 +577,41 @@ export const analyzeCV = async (cvText: string, targetJob: string): Promise<CVAn
 
 export const generateCoverLetter = async (cvText: string, jobDescription: string): Promise<string> => {
   const prompt = `
-    RÔLE : Expert en Copywriting RH.
+    RÔLE : Plume de Direction & Expert Copywriting RH.
     PROFIL CANDIDAT : "${cvText.substring(0, 3000)}"
     OFFRE D'EMPLOI : "${jobDescription.substring(0, 3000)}"
 
     MISSION :
-    Rédige une lettre de motivation ULTRA-PERSONNALISÉE et PERCUTANTE.
-    
-    INSTRUCTIONS DE STYLE (CRITIQUE) :
-    1. **INTERDIT ABSOLU** d'utiliser des balises Markdown comme **gras**, *italique*, ou des titres (###).
-    2. **INTERDIT** de mettre des placeholders comme [Nom de l'entreprise] -> DÉDUIS-LE ou mets "votre entreprise".
-    3. PAS de "Objet: Candidature au poste de...". Commence directement par "Madame, Monsieur,".
-    4. Ton : Professionnel, Confiant, Orienté Résultats.
-    5. Format : Texte brut, paragraphes bien aérés.
-    
-    La lettre doit donner envie de rencontrer le candidat immédiatement.
+    Rédige une lettre de motivation qui se démarque IMMÉDIATEMENT.
+    Elle doit être persuasive, démontrer une compréhension fine des enjeux du poste et prouver la valeur ajoutée du candidat.
+
+    STRUCTURE OBLIGATOIRE :
+    1. **Accroche** : Pas de "J'ai l'honneur de...". Une phrase qui connecte une réussite du candidat au besoin de l'entreprise.
+    2. **Le Besoin** : Montre que tu as compris leurs défis.
+    3. **La Solution (Moi)** : Preuves concrètes (chiffres, réalisations) qui répondent au besoin.
+    4. **Le Fit (Nous)** : Pourquoi cette culture/entreprise spécifiquement.
+    5. **Call to Action** : Proposition d'entretien proactive.
+
+    INSTRUCTIONS DE STYLE :
+    - Pas de Markdown.
+    - Pas de placeholders [Entreprise] (Déduis-le de l'offre ou mets "votre entreprise").
+    - Ton : Professionnel, Ambitieux, Humain.
   `;
 
   try {
     const text = await postAI('generateCoverLetter', { prompt });
     return text;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Cover Letter Error:", error);
-    throw new Error("La génération de la lettre a échoué.");
+    // Log more details if available
+    if (error.response) {
+        console.error("Response Status:", error.response.status);
+        try {
+            const text = await error.response.text();
+            console.error("Response Body:", text);
+        } catch (e) { /* ignore */ }
+    }
+    throw new Error("La génération de la lettre a échoué. " + (error.message || ''));
   }
 };

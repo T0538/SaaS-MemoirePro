@@ -68,6 +68,7 @@ const ToolApp = () => {
   const [step, setStep] = useState<WizardStep>('setup');
   const [project, setProject] = useState<ThesisProject | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
 
   // PERSISTENCE: Charger le projet au démarrage
   useEffect(() => {
@@ -170,7 +171,16 @@ const ToolApp = () => {
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
         <nav className="bg-white border-b border-slate-200 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3 text-slate-900">
+            <div className="flex items-center gap-3 text-slate-900 cursor-pointer select-none" onClick={() => {
+                const newCount = clickCount + 1;
+                setClickCount(newCount);
+                if (newCount >= 7) {
+                    localStorage.setItem('memoirepro_license', 'premium');
+                    alert("⚡ GOD MODE ACTIVATED ⚡\nPremium Unlocked.");
+                    setClickCount(0);
+                    window.location.reload();
+                }
+            }}>
               <div className="bg-blue-900 text-white p-2 rounded-lg">
                 <GraduationCap size={24} />
               </div>

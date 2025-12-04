@@ -118,14 +118,16 @@ if (envKey) {
 
 if (geminiKeys.length === 0) {
   console.error("CRITICAL: No GEMINI_API_KEY found in environment variables.");
-  geminiKeys = ['AIzaSyAPS1Z1eokteVis0kGrXa6FNXvoFDpxy_8']; // Hardcoded fallback for immediate fix based on user input
+  // No hardcoded fallback to prevent exposure.
+  // The server will fail to initialize AI, but will start.
 } else {
   console.log(`Loaded ${geminiKeys.length} Gemini API keys.`);
 }
 let currentKeyIndex = 0;
-let genAI = new GoogleGenerativeAI(geminiKeys[currentKeyIndex]);
+let genAI = geminiKeys.length > 0 ? new GoogleGenerativeAI(geminiKeys[currentKeyIndex]) : null;
 
 const runWithRetry = async (operation, retries = 2, delay = 1000) => {
+  if (!genAI) throw new Error("Server Misconfiguration: No API Key available.");
   try {
     return await operation();
   } catch (error) {
@@ -320,6 +322,21 @@ app.post('/api/gemini', async (req, res) => {
         const response = await result.response;
         return extractJson(response.text());
       });
+    } else if (action === 'generateCoverLetter') {
+      const prompt = payload.prompt;
+      result = await runWithRetry(async () => {
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      });
+    } else if (action === 'checkHealth') {
+      result = {
+        status: 'OK',
+        server: 'Express/Render',
+        timestamp: new Date().toISOString(),
+        keyStatus: geminiKeys.length > 0 ? 'Configured' : 'Missing'
+      };
     } else {
       throw new Error(`Unknown action: ${action}`);
     }

@@ -14,8 +14,8 @@ const getGeminiKey = () => {
     const keys = envKey.split(',').map(s => s.trim()).filter(Boolean);
     if (keys.length > 0) return keys[0];
   }
-  // Fallback Hardcoded (pour garantir le fonctionnement immédiat)
-  return 'AIzaSyAPS1Z1eokteVis0kGrXa6FNXvoFDpxy_8';
+  // No hardcoded fallback to prevent exposure.
+  return null;
 };
 
 // Helper pour extraire le JSON proprement
@@ -210,6 +210,22 @@ exports.handler = async (event, context) => {
         const response = await result.response;
         return extractJson(response.text());
       });
+    } else if (action === 'generateCoverLetter') {
+      const prompt = payload.prompt;
+      result = await runWithRetry(async () => {
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      });
+    } else if (action === 'checkHealth') {
+      const keyCheck = getGeminiKey();
+      result = {
+        status: 'OK',
+        server: 'Netlify Functions',
+        timestamp: new Date().toISOString(),
+        keyStatus: keyCheck ? 'Configured' : 'Missing'
+      };
     } else {
       throw new Error(`Unknown action: ${action}`);
     }
