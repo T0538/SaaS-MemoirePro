@@ -98,10 +98,27 @@ app.use((req, res, next) => {
   next();
 });
 
-let geminiKeys = (process.env.GEMINI_API_KEYS || process.env.GOOGLE_API_KEYS || process.env.GEMINI_API_KEY || process.env.API_KEY || '').split(',').map(s => s.trim()).filter(Boolean);
+// Explicitly load API key from file if not in env (common issue in some environments)
+let geminiKeys = [];
+const envKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS || process.env.GOOGLE_API_KEYS || process.env.API_KEY;
+if (envKey) {
+  geminiKeys = envKey.split(',').map(s => s.trim()).filter(Boolean);
+} else {
+  // Fallback: try to read .env manually if process.env failed
+  try {
+    const envContent = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+    const match = envContent.match(/GEMINI_API_KEY=(.*)/);
+    if (match && match[1]) {
+      geminiKeys = [match[1].trim()];
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 if (geminiKeys.length === 0) {
   console.error("CRITICAL: No GEMINI_API_KEY found in environment variables.");
-  geminiKeys = [''];
+  geminiKeys = ['AIzaSyAPS1Z1eokteVis0kGrXa6FNXvoFDpxy_8']; // Hardcoded fallback for immediate fix based on user input
 } else {
   console.log(`Loaded ${geminiKeys.length} Gemini API keys.`);
 }
