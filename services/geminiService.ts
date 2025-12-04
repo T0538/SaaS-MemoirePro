@@ -88,6 +88,53 @@ const runWithRetry = async <T>(operation: () => Promise<T>, retries = 3, delay =
 
 // --- FONCTIONS DE GÉNÉRATION ---
 
+export interface TopicIdea {
+  title: string;
+  description: string;
+  difficulty: 'Facile' | 'Moyen' | 'Difficile';
+  methodology: string;
+}
+
+export const generateTopicIdeas = async (
+  domain: string,
+  interests: string
+): Promise<TopicIdea[]> => {
+  const prompt = `
+    RÔLE : Tu es un Directeur de Recherche prestigieux. Ton but est de proposer des sujets de mémoire pertinents, innovants et réalisables.
+    
+    DOMAINE D'ÉTUDE : ${domain}
+    CENTRES D'INTÉRÊT : ${interests}
+
+    TACHE : Propose 3 sujets de mémoire excellents pour un étudiant de ce domaine.
+    
+    FORMAT DE SORTIE ATTENDU (JSON Tableau d'objets uniquement) :
+    [
+      {
+        "title": "Titre académique complet et accrocheur",
+        "description": "Courte explication de la problématique (2 phrases max)",
+        "difficulty": "Facile" | "Moyen" | "Difficile",
+        "methodology": "Type d'étude conseillée (ex: Qualitative, Étude de cas, Analyse quantitative)"
+      }
+    ]
+  `;
+
+  return runWithRetry(async () => {
+    const response = await ai.models.generateContent({
+      model: MODEL_FAST,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: 'application/json',
+        temperature: 0.7
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("Réponse vide de l'IA");
+    
+    return JSON.parse(cleanJson(text));
+  });
+};
+
 export const generateThesisOutline = async (
   topic: string, 
   domain: Domain, 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, LogOut, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight } from 'lucide-react';
+import { GraduationCap, ChevronDown, Sparkles, FileText, Users, Award, Menu, X, LogIn, LogOut, User, PenTool, Calendar, Book, Search, Download, Layout, Compass, MapPin, Globe2, Target, Lightbulb, Briefcase, Code, Scale, Stethoscope, HardHat, Palette, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -9,6 +9,7 @@ export const Header: React.FC = () => {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isOrientationOpen, setIsOrientationOpen] = useState(false);
   const [isFilieresOpen, setIsFilieresOpen] = useState(false);
+  const [isCareerOpen, setIsCareerOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,70 +118,86 @@ export const Header: React.FC = () => {
          </div>
       </div>
 
-      {/* BOTTOM BAR : Navigation Menu - WHITE BACKGROUND */}
-      <div className="bg-white border-b border-slate-100 hidden lg:block">
+      {/* BOTTOM BAR : Navigation Menu - FANTASY & HUMANIZED DESIGN */}
+      <div className="bg-white/90 backdrop-blur-xl border-b border-slate-200/60 hidden lg:block shadow-sm sticky top-[80px] z-40">
           <div className="max-w-7xl mx-auto px-6">
-              <nav className="flex items-center gap-8 text-sm">
+              <nav className="flex items-center justify-center gap-2 text-sm font-medium">
                   
                   {/* Mega Menu: Fonctionnalités */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-blue-600 transition-colors font-bold py-4">
-                        Fonctionnalités
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 transition-all px-5 py-4 rounded-full hover:bg-blue-50/50 group-hover:bg-blue-50/80 group-hover:text-blue-700">
+                        <span className="tracking-wide font-bold">Fonctionnalités</span>
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-blue-600" />
                     </button>
-                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[800px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-blue-500 border-x border-b border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-12 z-50 mt-0">
-                        <div className="col-span-7 p-8 border-r border-slate-50">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                                <PenTool size={14} /> Rédaction & Structure
+                    
+                    <div className="mega-menu-content opacity-0 invisible absolute top-[calc(100%-0.5rem)] left-1/2 -translate-x-1/2 w-[850px] bg-white rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] border border-slate-100/80 overflow-hidden transform translate-y-4 transition-all duration-300 cursor-default grid grid-cols-12 z-50 ring-1 ring-slate-900/5">
+                        
+                        {/* Decorative Elements */}
+                        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+
+                        <div className="col-span-7 p-10 relative z-10">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm shadow-blue-200/50">
+                                    <PenTool size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-serif text-xl font-bold text-slate-900">Studio de Rédaction</h3>
+                                    <p className="text-xs text-slate-500">L'intelligence artificielle au service de votre plume.</p>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-6">
-                                <Link to="/app" className="group/item block">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
-                                            <Layout size={18} />
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <Link to="/app" className="group/item p-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100 relative overflow-hidden bg-slate-50/50">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-sm group-hover/item:scale-110 transition-transform border border-blue-100">
+                                            <Layout size={16} />
                                         </div>
-                                        <span className="font-bold text-slate-800 group-hover/item:text-blue-700 transition-colors">Générateur de Plan</span>
+                                        <span className="font-bold text-slate-800 group-hover/item:text-blue-700">Générateur de Plan</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 ml-[44px]">Plan détaillé généré par IA.</p>
+                                    <p className="text-xs text-slate-500 pl-11 leading-relaxed">Structurez 50 pages en 2 min.</p>
                                 </Link>
-                                <Link to="/app" className="group/item block">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover/item:bg-amber-600 group-hover/item:text-white transition-colors">
-                                            <Sparkles size={18} />
+                                <Link to="/topic-ideas" className="group/item p-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100 relative overflow-hidden bg-slate-50/50">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-white text-amber-600 flex items-center justify-center shadow-sm group-hover/item:scale-110 transition-transform border border-amber-100">
+                                            <Sparkles size={16} />
                                         </div>
-                                        <span className="font-bold text-slate-800 group-hover/item:text-amber-700 transition-colors">Idées de Sujets</span>
+                                        <span className="font-bold text-slate-800 group-hover/item:text-amber-700">Idées de Sujets</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 ml-[44px]">Trouvez l'inspiration.</p>
+                                    <p className="text-xs text-slate-500 pl-11 leading-relaxed">Trouvez l'inspiration instantanément.</p>
                                 </Link>
-                                <Link to="/app" className="group/item block">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-teal-50 text-teal-600 rounded-lg group-hover/item:bg-teal-600 group-hover/item:text-white transition-colors">
-                                            <Search size={18} />
+                                <Link to="/app" className="group/item p-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100 relative overflow-hidden bg-slate-50/50">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-white text-teal-600 flex items-center justify-center shadow-sm group-hover/item:scale-110 transition-transform border border-teal-100">
+                                            <Search size={16} />
                                         </div>
-                                        <span className="font-bold text-slate-800 group-hover/item:text-teal-700 transition-colors">Recherche Sources</span>
+                                        <span className="font-bold text-slate-800 group-hover/item:text-teal-700">Recherche Sources</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 ml-[44px]">Analysez vos PDF.</p>
+                                    <p className="text-xs text-slate-500 pl-11 leading-relaxed">Analysez vos PDF et documents.</p>
                                 </Link>
-                                <Link to="/jury" className="group/item block">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover/item:bg-indigo-600 group-hover/item:text-white transition-colors">
-                                            <Users size={18} />
+                                <Link to="/jury" className="group/item p-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100 relative overflow-hidden bg-slate-50/50">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-white text-indigo-600 flex items-center justify-center shadow-sm group-hover/item:scale-110 transition-transform border border-indigo-100">
+                                            <Users size={16} />
                                         </div>
-                                        <span className="font-bold text-slate-800 group-hover/item:text-indigo-700 transition-colors">Simulateur Jury</span>
+                                        <span className="font-bold text-slate-800 group-hover/item:text-indigo-700">Simulateur Jury</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 ml-[44px]">Entraînez-vous à l'oral.</p>
+                                    <p className="text-xs text-slate-500 pl-11 leading-relaxed">Entraînez-vous à l'oral.</p>
                                 </Link>
                             </div>
                         </div>
-                        <div className="col-span-5 bg-slate-50 p-8 flex flex-col justify-center">
-                            <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                                <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
-                                    <Award className="text-amber-500" size={16} /> Premium
+                        <div className="col-span-5 bg-slate-50/80 p-10 flex flex-col justify-center relative overflow-hidden">
+                            {/* Decorative pattern */}
+                            <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#444cf7_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                            
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-lg relative z-10 hover:-translate-y-1 transition-transform duration-300">
+                                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                    <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg"><Award size={18} /></div> 
+                                    <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Passez Premium</span>
                                 </h4>
-                                <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-                                    Débloquez la puissance de GPT-4o et Claude 3.5 pour une rédaction académique d'excellence.
+                                <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                                    Débloquez la puissance de GPT-4o et Claude 3.5 pour une rédaction académique d'excellence sans limites.
                                 </p>
-                                <Link to="/pricing" className="block w-full py-2 text-center text-xs font-bold text-white bg-slate-900 rounded-lg hover:bg-blue-600 transition-colors">
+                                <Link to="/pricing" className="block w-full py-3 text-center text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/20">
                                     Voir les offres
                                 </Link>
                             </div>
@@ -190,23 +207,24 @@ export const Header: React.FC = () => {
 
                   {/* Mega Menu: Orientation */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-blue-600 transition-colors font-bold py-4">
-                        Orientation
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 transition-all px-5 py-4 rounded-full hover:bg-blue-50/50 group-hover:bg-blue-50/80 group-hover:text-blue-700">
+                        <span className="tracking-wide font-bold">Orientation</span>
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-blue-600" />
                     </button>
-                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[900px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-blue-500 border-x border-b border-slate-100 overflow-hidden transform translate-y-2 transition-all duration-200 cursor-default grid grid-cols-3 z-50 mt-0">
+                    <div className="mega-menu-content opacity-0 invisible absolute top-[calc(100%-0.5rem)] left-1/2 -translate-x-1/2 w-[900px] bg-white rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] border border-slate-100/80 overflow-hidden transform translate-y-4 transition-all duration-300 cursor-default grid grid-cols-3 z-50 ring-1 ring-slate-900/5">
                         
                         {/* Column 1: Test IA */}
-                        <div className="col-span-1 p-8 border-r border-slate-50 bg-gradient-to-b from-blue-50/50 to-transparent">
-                            <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
-                                <Compass size={20} />
+                        <div className="col-span-1 p-8 border-r border-slate-50 bg-gradient-to-b from-blue-50/30 to-transparent relative overflow-hidden group/col">
+                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 transform scale-x-0 group-hover/col:scale-x-100 transition-transform duration-500 origin-left"></div>
+                            <div className="h-12 w-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100 group-hover/col:scale-110 transition-transform">
+                                <Compass size={24} />
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-2">Test d'Orientation IA</h3>
-                            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-                                Notre algorithme analyse votre personnalité, vos notes et vos passions pour vous révéler votre voie idéale.
+                            <h3 className="text-xl font-serif font-bold text-slate-900 mb-3">Test d'Orientation IA</h3>
+                            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+                                Notre algorithme analyse votre personnalité et vos notes pour vous révéler votre voie idéale.
                             </p>
-                            <Link to="/orientation" className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:gap-3 transition-all">
-                                Commencer le test <ArrowRight size={14} />
+                            <Link to="/orientation" className="inline-flex items-center gap-2 text-sm font-bold text-white bg-blue-600 px-5 py-2.5 rounded-full hover:bg-blue-700 hover:gap-4 transition-all shadow-md shadow-blue-200">
+                                Commencer le test <ArrowRight size={16} />
                             </Link>
                         </div>
 
@@ -215,32 +233,32 @@ export const Header: React.FC = () => {
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                 <Globe2 size={14} /> Par Destination
                             </div>
-                            <div className="space-y-1">
-                                <Link to="/destinations/europe" className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors group/item">
-                                    <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0">
-                                        <MapPin size={14} />
+                            <div className="space-y-2">
+                                <Link to="/destinations/europe" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group/item">
+                                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0 border border-blue-100">
+                                        <MapPin size={18} />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-slate-800 group-hover/item:text-blue-600 transition">Étudier en Europe</h4>
-                                        <p className="text-[10px] text-slate-500">Campus France, Visas.</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Campus France, Visas.</p>
                                     </div>
                                 </Link>
-                                <Link to="/destinations/africa" className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors group/item">
-                                    <div className="w-8 h-8 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center shrink-0">
-                                        <MapPin size={14} />
+                                <Link to="/destinations/africa" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group/item">
+                                    <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center shrink-0 border border-amber-100">
+                                        <MapPin size={18} />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-slate-800 group-hover/item:text-amber-600 transition">Étudier en Afrique</h4>
-                                        <p className="text-[10px] text-slate-500">Sénégal, Maroc, Côte d'Ivoire.</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Sénégal, Maroc, RCI.</p>
                                     </div>
                                 </Link>
-                                <Link to="/destinations/canada" className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors group/item">
-                                    <div className="w-8 h-8 bg-red-50 text-red-600 rounded-full flex items-center justify-center shrink-0">
-                                        <MapPin size={14} />
+                                <Link to="/destinations/canada" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group/item">
+                                    <div className="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center shrink-0 border border-red-100">
+                                        <MapPin size={18} />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-800 group-hover/item:text-red-600 transition">Canada & International</h4>
-                                        <p className="text-[10px] text-slate-500">Bourses, Équivalences.</p>
+                                        <h4 className="text-sm font-bold text-slate-800 group-hover/item:text-red-600 transition">Canada & Monde</h4>
+                                        <p className="text-xs text-slate-500 mt-0.5">Bourses, Équivalences.</p>
                                     </div>
                                 </Link>
                             </div>
@@ -251,22 +269,22 @@ export const Header: React.FC = () => {
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                 <Lightbulb size={14} /> Conseils Pratiques
                             </div>
-                            <ul className="space-y-3">
+                            <ul className="space-y-4">
                                 <li>
-                                    <Link to="/blog/guide-methodologique" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:translate-x-1 transition-all">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <Link to="/blog/guide-methodologique" className="flex items-center gap-3 text-sm font-medium text-slate-600 hover:text-blue-600 hover:translate-x-1 transition-all group">
+                                        <span className="w-2 h-2 bg-blue-200 rounded-full group-hover:bg-blue-500 transition-colors"></span>
                                         Lettre de motivation
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/blog/reussir-soutenance" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:translate-x-1 transition-all">
-                                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                    <Link to="/blog/reussir-soutenance" className="flex items-center gap-3 text-sm font-medium text-slate-600 hover:text-blue-600 hover:translate-x-1 transition-all group">
+                                        <span className="w-2 h-2 bg-blue-200 rounded-full group-hover:bg-blue-500 transition-colors"></span>
                                         Entretien d'admission
                                     </Link>
                                 </li>
                             </ul>
-                            <Link to="/resources" className="mt-6 block text-center text-xs font-bold text-blue-600 hover:underline">
-                                Voir tous les guides →
+                            <Link to="/resources" className="mt-8 inline-block text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors border-b border-blue-200 hover:border-blue-600 pb-0.5">
+                                Voir tous les guides pratiques
                             </Link>
                         </div>
                     </div>
@@ -274,12 +292,12 @@ export const Header: React.FC = () => {
 
                    {/* Mega Menu: Filières */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-blue-600 transition-colors font-bold py-4">
-                        Filières
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 transition-all px-5 py-4 rounded-full hover:bg-blue-50/50 group-hover:bg-blue-50/80 group-hover:text-blue-700">
+                        <span className="tracking-wide font-bold">Filières</span>
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-blue-600" />
                     </button>
-                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-1/2 -translate-x-1/2 w-[800px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-blue-500 border-x border-b border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-0">
-                       <div className="grid grid-cols-4 gap-4">
+                    <div className="mega-menu-content opacity-0 invisible absolute top-[calc(100%-0.5rem)] left-1/2 -translate-x-1/2 w-[850px] bg-white rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] border border-slate-100/80 p-8 transform translate-y-4 transition-all duration-300 cursor-default z-50 ring-1 ring-slate-900/5">
+                       <div className="grid grid-cols-4 gap-6">
                           {[
                             { slug: 'informatique', name: 'Informatique', icon: Code, color: 'blue' },
                             { slug: 'gestion', name: 'Gestion & RH', icon: Briefcase, color: 'emerald' },
@@ -290,17 +308,17 @@ export const Header: React.FC = () => {
                             { slug: 'marketing', name: 'Marketing', icon: Award, color: 'pink' },
                             { slug: 'social', name: 'Social', icon: Users, color: 'indigo' }
                           ].map((f) => (
-                              <Link key={f.slug} to={`/filieres/${f.slug}`} className="flex flex-col items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group/item text-center">
-                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover/item:scale-110 bg-${f.color}-50 text-${f.color}-600`}>
-                                     {React.createElement(f.icon, { size: 24 })}
+                              <Link key={f.slug} to={`/filieres/${f.slug}`} className="flex flex-col items-center p-6 rounded-2xl hover:bg-slate-50 hover:shadow-md transition-all group/item text-center border border-transparent hover:border-slate-100">
+                                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover/item:scale-110 group-hover/item:-rotate-3 bg-${f.color}-50 text-${f.color}-600 shadow-sm`}>
+                                     {React.createElement(f.icon, { size: 26 })}
                                   </div>
-                                  <span className="text-sm font-bold text-slate-800 group-hover/item:text-blue-600">{f.name}</span>
+                                  <span className="text-sm font-bold text-slate-700 group-hover/item:text-blue-600 transition-colors">{f.name}</span>
                               </Link>
                           ))}
                        </div>
-                       <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-                          <Link to="/orientation" className="text-sm font-bold text-blue-600 hover:underline">
-                             Vous ne savez pas quoi choisir ? Faites le test d'orientation →
+                       <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+                          <Link to="/orientation" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
+                             Vous ne savez pas quoi choisir ? <span className="underline decoration-2 decoration-blue-200 hover:decoration-blue-500">Faites le test d'orientation</span>
                           </Link>
                        </div>
                     </div>
@@ -308,29 +326,31 @@ export const Header: React.FC = () => {
 
                    {/* Mega Menu: Carrière (NEW) */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-amber-600 transition-colors font-bold py-4">
-                        Carrière & Emploi
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-amber-600 transition-all px-5 py-4 rounded-full hover:bg-amber-50/50 group-hover:bg-amber-50/80 group-hover:text-amber-600">
+                        <span className="tracking-wide font-bold">Carrière</span>
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-amber-600" />
                     </button>
-                    <div className="mega-menu-content opacity-0 invisible absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-amber-500 border-x border-b border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-0">
+                    <div className="mega-menu-content opacity-0 invisible absolute top-[calc(100%-0.5rem)] left-1/2 -translate-x-1/2 w-[650px] bg-white rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] border border-slate-100/80 p-8 transform translate-y-4 transition-all duration-300 cursor-default z-50 ring-1 ring-slate-900/5">
                        <div className="grid grid-cols-2 gap-6">
-                          <Link to="/jobs" className="group/card block p-4 rounded-xl hover:bg-amber-50 transition-colors border border-transparent hover:border-amber-100">
-                              <div className="flex items-center gap-3 mb-2">
-                                 <div className="bg-amber-100 text-amber-700 p-2 rounded-lg">
-                                    <Briefcase size={20} />
+                          <Link to="/jobs" className="group/card block p-6 rounded-2xl hover:bg-amber-50/50 transition-all border border-slate-100 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-100/50 relative overflow-hidden">
+                              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover/card:opacity-50 transition-opacity"></div>
+                              <div className="flex items-center gap-4 mb-3 relative z-10">
+                                 <div className="bg-white border border-amber-100 text-amber-600 p-3 rounded-xl shadow-sm group-hover/card:scale-110 transition-transform">
+                                    <Briefcase size={24} />
                                  </div>
-                                 <h4 className="font-bold text-slate-900 group-hover/card:text-amber-700">Trouver un Emploi</h4>
+                                 <h4 className="font-serif font-bold text-lg text-slate-900 group-hover/card:text-amber-700">Trouver un Emploi</h4>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed">Recherche intelligente par IA dans votre région et à l'international.</p>
+                              <p className="text-sm text-slate-500 leading-relaxed pl-[60px]">Recherche intelligente par IA dans votre région et à l'international.</p>
                           </Link>
-                          <Link to="/coaching" className="group/card block p-4 rounded-xl hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-100">
-                              <div className="flex items-center gap-3 mb-2">
-                                 <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
-                                    <Award size={20} />
+                          <Link to="/coaching" className="group/card block p-6 rounded-2xl hover:bg-blue-50/50 transition-all border border-slate-100 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 relative overflow-hidden">
+                              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-100 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover/card:opacity-50 transition-opacity"></div>
+                              <div className="flex items-center gap-4 mb-3 relative z-10">
+                                 <div className="bg-white border border-blue-100 text-blue-600 p-3 rounded-xl shadow-sm group-hover/card:scale-110 transition-transform">
+                                    <Award size={24} />
                                  </div>
-                                 <h4 className="font-bold text-slate-900 group-hover/card:text-blue-700">Coaching Carrière</h4>
+                                 <h4 className="font-serif font-bold text-lg text-slate-900 group-hover/card:text-blue-700">Coaching Carrière</h4>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed">Analyse de CV et rédaction de lettre de motivation par IA.</p>
+                              <p className="text-sm text-slate-500 leading-relaxed pl-[60px]">Analyse de CV et rédaction de lettre de motivation par IA.</p>
                           </Link>
                        </div>
                     </div>
@@ -338,39 +358,39 @@ export const Header: React.FC = () => {
 
                    {/* Mega Menu: Ressources */}
                   <div className="relative group mega-menu-group h-full flex items-center">
-                    <button className="flex items-center gap-1.5 text-slate-600 group-hover:text-blue-600 transition-colors font-bold py-4">
-                        Ressources
+                    <button className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 transition-all px-5 py-4 rounded-full hover:bg-blue-50/50 group-hover:bg-blue-50/80 group-hover:text-blue-700">
+                        <span className="tracking-wide font-bold">Ressources</span>
                         <ChevronDown size={14} className="mt-0.5 group-hover:rotate-180 transition-transform duration-300 text-slate-400 group-hover:text-blue-600" />
                     </button>
-                     <div className="mega-menu-content opacity-0 invisible absolute top-full left-0 w-[500px] bg-white rounded-b-xl shadow-xl border-t-2 border-t-blue-500 border-x border-b border-slate-100 p-6 transform translate-y-2 transition-all duration-200 cursor-default z-50 mt-0">
-                        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Guides & Conseils</p>
-                            <Link to="/resources" className="text-xs font-bold text-blue-600 hover:underline">Voir tout</Link>
+                     <div className="mega-menu-content opacity-0 invisible absolute top-[calc(100%-0.5rem)] left-1/2 -translate-x-1/2 w-[550px] bg-white rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] border border-slate-100/80 p-8 transform translate-y-4 transition-all duration-300 cursor-default z-50 ring-1 ring-slate-900/5">
+                        <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><Book size={14} /> Bibliothèque</p>
+                            <Link to="/resources" className="text-xs font-bold text-blue-600 hover:underline">Voir tout →</Link>
                         </div>
-                        <div className="grid grid-cols-1 gap-2">
-                            <Link to="/blog/guide-methodologique" className="flex items-center gap-3 p-2 hover:bg-blue-50 rounded-lg transition-colors group/item">
-                                <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
-                                    <FileText size={16} />
+                        <div className="grid grid-cols-1 gap-3">
+                            <Link to="/blog/guide-methodologique" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-colors group/item border border-transparent hover:border-slate-100">
+                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors shadow-sm">
+                                    <FileText size={18} />
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-slate-800">Guide Méthodologique</h4>
-                                    <p className="text-[10px] text-slate-500">De la problématique à la conclusion.</p>
+                                    <p className="text-xs text-slate-500">De la problématique à la conclusion.</p>
                                 </div>
                             </Link>
-                             <Link to="/blog/structure-memoire-qhse" className="flex items-center gap-3 p-2 hover:bg-blue-50 rounded-lg transition-colors group/item">
-                                <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
-                                    <Sparkles size={16} />
+                             <Link to="/blog/structure-memoire-qhse" className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-colors group/item border border-transparent hover:border-slate-100">
+                                <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 group-hover/item:bg-emerald-600 group-hover/item:text-white transition-colors shadow-sm">
+                                    <ShieldCheck size={18} />
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-slate-800">Spécial QHSE</h4>
-                                    <p className="text-[10px] text-slate-500">Normes ISO & Analyses.</p>
+                                    <p className="text-xs text-slate-500">Normes ISO & Analyses.</p>
                                 </div>
                             </Link>
                         </div>
                     </div>
                   </div>
 
-                  <Link to="/pricing" className="text-slate-600 hover:text-blue-600 font-bold transition py-4">Tarifs</Link>
+                  <Link to="/pricing" className="text-slate-600 hover:text-blue-700 font-bold transition-all px-5 py-4 rounded-full hover:bg-blue-50/50">Tarifs</Link>
               </nav>
           </div>
       </div>
@@ -427,7 +447,7 @@ export const Header: React.FC = () => {
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Layout size={16} /></div> Générateur de Plan
                     </Link>
-                    <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                    <Link to="/topic-ideas" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
                         <div className="bg-amber-100 p-1.5 rounded text-amber-600"><Sparkles size={16} /></div> Idées de Sujets
                     </Link>
                     <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
@@ -481,6 +501,22 @@ export const Header: React.FC = () => {
                          </Link>
                     ))}
                     <Link to="/orientation" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 text-center text-xs text-blue-600 font-bold mt-2">Voir toutes les filières →</Link>
+                 </div>
+               )}
+            </div>
+
+            <div className="border-b border-slate-100 py-4">
+               <button onClick={() => setIsCareerOpen(!isCareerOpen)} className="flex items-center justify-between w-full font-bold text-slate-900">
+                Carrière <ChevronDown size={20} className={`transition-transform duration-300 ${isCareerOpen ? 'rotate-180 text-blue-600' : 'text-slate-400'}`} />
+               </button>
+               {isCareerOpen && (
+                 <div className="mt-4 flex flex-col gap-3 pl-2">
+                    <Link to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-amber-100 p-1.5 rounded text-amber-600"><Briefcase size={16} /></div> Trouver un emploi
+                    </Link>
+                    <Link to="/coaching" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600">
+                        <div className="bg-blue-100 p-1.5 rounded text-blue-600"><Award size={16} /></div> Coaching Carrière
+                    </Link>
                  </div>
                )}
             </div>

@@ -20,6 +20,7 @@ import { JobsPage } from './pages/JobsPage';
 import { CoachingPage } from './pages/CoachingPage';
 import { DestinationPage } from './pages/DestinationPage';
 import { FilierePage } from './pages/FilierePage';
+import { TopicIdeasPage } from './pages/TopicIdeasPage';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GraduationCap } from 'lucide-react';
@@ -256,7 +257,8 @@ const App = () => {
         <Route path="/orientation" element={<MarketingLayout><OrientationPage /></MarketingLayout>} />
         <Route path="/jobs" element={<MarketingLayout><JobsPage /></MarketingLayout>} />
         <Route path="/coaching" element={<MarketingLayout><CoachingPage /></MarketingLayout>} />
-        <Route path="/destinations/:region" element={<MarketingLayout><DestinationPage /></MarketingLayout>} />
+            <Route path="/topic-ideas" element={<TopicIdeasPage />} />
+            <Route path="/destinations/:slug" element={<MarketingLayout><DestinationPage /></MarketingLayout>} />
         <Route path="/filieres/:slug" element={<MarketingLayout><FilierePage /></MarketingLayout>} />
 
         {/* Protected App Routes */}
