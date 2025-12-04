@@ -211,7 +211,10 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Service IA indisponible (Online Fix)' })
+      body: JSON.stringify({ 
+        error: `Service IA indisponible (Online Fix): ${error.message}`,
+        details: error.stack
+      })
     };
   }
 };
