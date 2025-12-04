@@ -18,9 +18,6 @@ const getGeminiKey = () => {
   return 'AIzaSyAPS1Z1eokteVis0kGrXa6FNXvoFDpxy_8';
 };
 
-// Initialisation de l'IA
-const genAI = new GoogleGenerativeAI(getGeminiKey());
-
 // Helper pour extraire le JSON proprement
 function extractJson(text) {
   if (!text) return [];
@@ -85,6 +82,23 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // 1. RECUPERATION DE LA CLE (Debug)
+    const apiKey = getGeminiKey();
+    let keyStatus = "Missing";
+    if (apiKey) {
+      if (apiKey.length > 10) {
+        keyStatus = `Present (Starts: ${apiKey.substring(0, 4)}..., Ends: ...${apiKey.substring(apiKey.length - 4)})`;
+      } else {
+        keyStatus = `Invalid Length (${apiKey.length})`;
+      }
+    }
+
+    // 2. INITIALISATION INTERNE (Pour éviter le cache Lambda avec une mauvaise clé)
+    if (!apiKey) {
+        throw new Error("CRITICAL: No API Key available even after fallback.");
+    }
+    const genAI = new GoogleGenerativeAI(apiKey);
+
     const { action, payload } = JSON.parse(event.body || '{}');
     
     if (!action) {
@@ -208,11 +222,18 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error(`[Function Error] ${error.message}`);
+    // RE-FETCH KEY FOR DEBUGGING IN ERROR
+    const debugKey = getGeminiKey();
+    const debugStatus = debugKey && debugKey.length > 10 
+      ? `Present (Starts: ${debugKey.substring(0, 4)}...)` 
+      : `Missing or Invalid (${debugKey})`;
+
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
         error: `Service IA indisponible (Online Fix): ${error.message}`,
+        keyDebug: debugStatus,
         details: error.stack
       })
     };
