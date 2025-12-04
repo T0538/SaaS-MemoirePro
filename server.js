@@ -4,7 +4,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
-const { GoogleGenAI, Type } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // CLÉ DE TEST STRIPE (Découpée pour GitHub)
 const LOCAL_STRIPE_KEY = 'sk_test_' + '51SVEXFHg3BhYAtWaFKxCqiF5yFb2q2cL7sFWkWxIu4gX3qebEwX1xIrc3uiBNX4UYxWi8uAzN1N7svGume4VXWI200zV3nudoX';
@@ -66,6 +66,7 @@ function parseAllowedIps() {
 
 function isIpAllowed(ip, allowed) {
   if (allowed.length === 0) return true;
+  if (allowed.includes('*')) return true;
   const clean = (ip || '').replace('::ffff:', '');
   return allowed.some(rule => {
     if (rule.endsWith('*')) return clean.startsWith(rule.slice(0, -1));
@@ -98,27 +99,29 @@ app.use((req, res, next) => {
 });
 
 let geminiKeys = (process.env.GEMINI_API_KEYS || process.env.GOOGLE_API_KEYS || process.env.GEMINI_API_KEY || process.env.API_KEY || '').split(',').map(s => s.trim()).filter(Boolean);
-if (geminiKeys.length === 0) geminiKeys = [''];
+if (geminiKeys.length === 0) {
+  console.error("CRITICAL: No GEMINI_API_KEY found in environment variables.");
+  geminiKeys = [''];
+} else {
+  console.log(`Loaded ${geminiKeys.length} Gemini API keys.`);
+}
 let currentKeyIndex = 0;
-let ai = new GoogleGenAI({ apiKey: geminiKeys[currentKeyIndex] });
-let lastRotation = Date.now();
-const intervalMin = parseInt(process.env.ROTATION_INTERVAL_MINUTES || '1440', 10);
-setInterval(() => {
-  currentKeyIndex = (currentKeyIndex + 1) % geminiKeys.length;
-  ai = new GoogleGenAI({ apiKey: geminiKeys[currentKeyIndex] });
-  lastRotation = Date.now();
-}, Math.max(1, intervalMin) * 60 * 1000);
+let genAI = new GoogleGenerativeAI(geminiKeys[currentKeyIndex]);
 
 const runWithRetry = async (operation, retries = 2, delay = 1000) => {
   try {
     return await operation();
   } catch (error) {
     const msg = String(error && error.message || '');
-    const status = error && (error.status || error.code);
+    // GoogleGenerativeAI uses 'status' or 'statusText' sometimes, or just throws Error
+    const status = error && (error.status || error.response?.status);
+    console.warn(`[AI Retry] Error: ${msg} (Status: ${status})`);
+    
     const shouldRotate = status === 401 || status === 403 || status === 429 || msg.includes('quota') || msg.includes('overloaded');
     if (shouldRotate) {
+      console.log("Rotating API Key due to error...");
       currentKeyIndex = (currentKeyIndex + 1) % geminiKeys.length;
-      ai = new GoogleGenAI({ apiKey: geminiKeys[currentKeyIndex] });
+      genAI = new GoogleGenerativeAI(geminiKeys[currentKeyIndex]);
     }
     if (retries > 0) {
       await new Promise(r => setTimeout(r, delay));
@@ -127,6 +130,42 @@ const runWithRetry = async (operation, retries = 2, delay = 1000) => {
     throw error;
   }
 };
+
+// Helper to reliably extract JSON
+function extractJson(text) {
+  if (!text) return [];
+  try {
+    // 1. Try standard cleanup (markdown)
+    const clean = text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+    return JSON.parse(clean);
+  } catch (e1) {
+    try {
+      // 2. Try finding the first '[' or '{' and the last ']' or '}'
+      const firstArr = text.indexOf('[');
+      const firstObj = text.indexOf('{');
+      let start = -1;
+      if (firstArr !== -1 && firstObj !== -1) start = Math.min(firstArr, firstObj);
+      else if (firstArr !== -1) start = firstArr;
+      else if (firstObj !== -1) start = firstObj;
+
+      const lastArr = text.lastIndexOf(']');
+      const lastObj = text.lastIndexOf('}');
+      let end = -1;
+      if (lastArr !== -1 && lastObj !== -1) end = Math.max(lastArr, lastObj);
+      else if (lastArr !== -1) end = lastArr;
+      else if (lastObj !== -1) end = lastObj;
+
+      if (start !== -1 && end !== -1 && end > start) {
+        const extracted = text.substring(start, end + 1);
+        return JSON.parse(extracted);
+      }
+      throw e1;
+    } catch (e2) {
+      console.error("[JSON Error] Failed to parse:", text.substring(0, 200) + "...");
+      throw new Error("Invalid JSON response from AI");
+    }
+  }
+}
 
 let leakScan = { scanned: false, found: [] };
 function scanDistForSecrets() {
@@ -151,117 +190,137 @@ scanDistForSecrets();
 app.post('/api/gemini', async (req, res) => {
   try {
     const { action, payload } = req.body || {};
+    
+    if (!geminiKeys[0]) {
+      console.error("Error: Missing API Key on request");
+      return res.status(500).json({ error: 'Server Misconfiguration: Missing Gemini API Key' });
+    }
+
     const ip = req.ip;
-    const start = Date.now();
+    console.log(`[API] Request: ${action} from ${ip}`);
+
     let result;
-    if (!geminiKeys[currentKeyIndex]) return res.status(500).json({ error: 'Missing API key' });
+    
+    // Helper to get model with config
+    const getModel = (modelName, jsonMode = false) => {
+      const config = jsonMode ? { responseMimeType: 'application/json' } : undefined;
+      return genAI.getGenerativeModel({ model: modelName, generationConfig: config });
+    };
+
     if (action === 'generateThesisOutline') {
       const prompt = `RÔLE : Directeur de Recherche.\nSUJET : "${payload.topic}"\nCONTEXTE : "${payload.context}"\nMISSION : Générer un plan académique structuré. Réponds en JSON: [{"title":"...","sections":["..."]}]`;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        const text = response.text || '[]';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-pro', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'generateSectionContent') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        return (response.text || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return (response.text() || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
       });
     } else if (action === 'improveText') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        return (response.text || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return (response.text() || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
       });
     } else if (action === 'expandContent') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        return (response.text || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return (response.text() || '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
       });
     } else if (action === 'generateTopicIdeas') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-        const text = response.text || '[]';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-flash', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'generateJuryQuestions') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-        const text = response.text || '[]';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-flash', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'interactWithJury') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-        const text = response.text || '{}';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-flash', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'suggestReferences') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        const text = response.text || '[]';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-pro', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'askDocumentContext') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        return response.text || '';
+        const model = getModel('gemini-2.5-pro');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text() || '';
       });
     } else if (action === 'analyzeOrientationProfile') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        const text = response.text || '{}';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-pro', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'searchJobsWithAI') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-        const text = response.text || '[]';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
+        const model = getModel('gemini-2.5-flash', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else if (action === 'analyzeCV') {
       const prompt = payload.prompt;
       result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt, config: { responseMimeType: 'application/json' } });
-        const text = response.text || '{}';
-        return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim());
-      });
-    } else if (action === 'generateCoverLetter') {
-      const prompt = payload.prompt;
-      result = await runWithRetry(async () => {
-        const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
-        let text = response.text || '';
-        text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^Objet:.*\n/i, '').trim();
-        return text;
+        const model = getModel('gemini-2.5-pro', true);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
       });
     } else {
-      return res.status(400).json({ error: 'Unknown action' });
+      throw new Error(`Unknown action: ${action}`);
     }
-    const duration = Date.now() - start;
-    res.json({ result, meta: { ip, duration, keyIndex: currentKeyIndex, rotatedAt: lastRotation, leakScan } });
-  } catch (e) {
-    res.status(500).json({ error: String(e && e.message || e) });
+
+    res.json({ result });
+  } catch (error) {
+    console.error(`[API Error] ${error.message}`);
+    if (error.message.includes('Safety') || error.message.includes('blocked')) {
+      return res.status(400).json({ error: 'Contenu bloqué par la sécurité IA.' });
+    }
+    res.status(500).json({ error: 'Service IA indisponible' });
   }
 });
 
-app.get('/security/health', (req, res) => {
-  res.json({ leakScan, keyIndex: currentKeyIndex, rotatedAt: lastRotation });
-});
-
-// Gérer toutes les autres routes en renvoyant l'index.html (SPA)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
+// Start Server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
+  if (leakScan.scanned && leakScan.found.length > 0) {
+    console.warn("WARNING: Potential secrets found in dist:", leakScan.found);
+  }
 });
