@@ -1,4 +1,3 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { Domain, Chapter, Section, JuryQuestion, JuryPersona, JuryMessage, Reference } from '../types';
 
 // Helper to create ID
@@ -34,15 +33,21 @@ const cleanRawText = (text: string): string => {
   return clean.trim();
 };
 
-// Initialisation sécurisée de l'IA
-// Utilisation de import.meta.env pour Vite (plus robuste en production)
-const apiKey = (import.meta.env.VITE_API_KEY as string) || (process.env.API_KEY as string) || '';
-
-if (!apiKey) {
-  console.warn("ATTENTION : Clé API Gemini manquante. Vérifiez le fichier .env et assurez-vous que la variable commence par VITE_");
-}
-
-const ai = new GoogleGenAI({ apiKey });
+const postAI = async (action: string, payload: any): Promise<any> => {
+  // En dev (localhost), l'URL est relative. En prod, on utilise la variable d'env VITE_API_URL.
+  const baseUrl = import.meta.env.VITE_API_URL || '';
+  const res = await fetch(`${baseUrl}/api/gemini`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, payload })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    console.error("AI Error:", data);
+    throw new Error(data.error || data.message || 'Service IA indisponible (Erreur inconnue)');
+  }
+  return data.result;
+};
 
 // Modèle performant pour le raisonnement complexe (Plan, Rédaction)
 const MODEL_REASONING = 'gemini-2.5-pro';
@@ -119,19 +124,8 @@ export const generateTopicIdeas = async (
   `;
 
   return runWithRetry(async () => {
-    const response = await ai.models.generateContent({
-      model: MODEL_FAST,
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: 'application/json',
-        temperature: 0.7
-      }
-    });
-
-    const text = response.text;
-    if (!text) throw new Error("Réponse vide de l'IA");
-    
-    return JSON.parse(cleanJson(text));
+    const result = await postAI('generateTopicIdeas', { prompt });
+    return result as TopicIdea[];
   });
 };
 
@@ -169,38 +163,7 @@ export const generateThesisOutline = async (
   `;
 
   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING, // Utilisation de PRO pour la structure
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING, description: "Titre du chapitre (ex: 'Partie I: ...')" },
-              sections: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING, description: "Titre de la section" }
-              }
-            },
-            required: ["title", "sections"]
-          }
-        }
-      }
-    }));
-
-    // Nettoyage et parsing sécurisé
-    const jsonText = cleanJson(response.text || "[]");
-    let rawData;
-    try {
-      rawData = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error("Erreur de parsing JSON:", parseError, response.text);
-      throw new Error("Le plan généré n'est pas un JSON valide.");
-    }
-
+    const rawData = await postAI('generateThesisOutline', { topic, domain, context });
     return rawData.map((chap: any) => ({
       id: generateId(),
       title: chap.title,
@@ -211,7 +174,6 @@ export const generateThesisOutline = async (
         status: 'pending'
       }))
     }));
-
   } catch (error) {
     console.error("Error generating outline:", error);
     throw new Error("Impossible de générer le plan. Veuillez vérifier votre connexion ou réessayer plus tard.");
@@ -277,11 +239,8 @@ export const generateSectionContent = async (
   `;
 
   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING, // PRO pour la qualité rédactionnelle
-      contents: prompt,
-    }));
-    return cleanRawText(response.text || "");
+    const text = await postAI('generateSectionContent', { prompt });
+    return cleanRawText(text || "");
   } catch (error) {
     console.error("Erreur rédaction:", error);
     throw new Error("Service de rédaction momentanément indisponible.");
@@ -290,9 +249,7 @@ export const generateSectionContent = async (
 
 export const improveText = async (text: string, instruction: string): Promise<string> => {
   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING, // PRO pour bien comprendre les nuances
-      contents: `
+    const res = await postAI('improveText', { prompt: `
         RÔLE : Éditeur académique rigoureux.
         TEXTE SOURCE : "${text}"
         INSTRUCTION : "${instruction}"
@@ -300,9 +257,8 @@ export const improveText = async (text: string, instruction: string): Promise<st
         MISSION : Réécris le texte en appliquant l'instruction.
         CRITÈRES : Ton universitaire, vocabulaire riche, syntaxe impeccable.
         FORMAT : Texte brut sans markdown ni commentaires.
-      `
-    }));
-    return cleanRawText(response.text || text);
+      ` });
+    return cleanRawText(res || text);
   } catch (e) {
     return text;
   }
@@ -329,11 +285,8 @@ export const expandContent = async (text: string, domain: string): Promise<strin
       - Commence DIRECTEMENT par le contenu rédactionnel.
     `;
 
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING,
-      contents: prompt
-    }));
-    return cleanRawText(response.text || text);
+    const res = await postAI('expandContent', { prompt });
+    return cleanRawText(res || text);
   } catch (e) {
     throw new Error("Impossible d'étendre le contenu.");
   }
@@ -349,27 +302,7 @@ export const generateJuryQuestions = async (text: string, domain: string): Promi
       Réponds UNIQUEMENT en JSON.
     `;
 
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_FAST, // Flash suffit pour analyser et poser des questions
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              question: { type: Type.STRING },
-              suggestion: { type: Type.STRING }
-            },
-            required: ["question", "suggestion"]
-          }
-        }
-      }
-    }));
-    
-    const jsonText = cleanJson(response.text || "[]");
-    const data = JSON.parse(jsonText);
+    const data = await postAI('generateJuryQuestions', { prompt });
 
     return data.map((q: any) => ({
         id: generateId(),
@@ -414,14 +347,7 @@ export const interactWithJury = async (
     `;
   
     try {
-      const response = await runWithRetry(() => ai.models.generateContent({
-        model: MODEL_FAST, // Flash pour la réactivité du chat
-        contents: prompt,
-        config: { responseMimeType: "application/json" }
-      }));
-  
-      const jsonText = cleanJson(response.text || "{}");
-      const data = JSON.parse(jsonText);
+      const data = await postAI('interactWithJury', { prompt });
       
       return {
         content: data.jury_response || "Pouvez-vous préciser votre pensée ?",
@@ -443,28 +369,7 @@ export const suggestReferences = async (topic: string, domain: string): Promise<
       Format attendu : JSON (Liste d'objets avec title, author, year).
     `;
 
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING, // Pro pour éviter les hallucinations bibliographiques
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-         responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              author: { type: Type.STRING },
-              year: { type: Type.STRING } // String car parfois "2023" ou "Mai 2023"
-            },
-            required: ["title", "author", "year"]
-          }
-        }
-      }
-    }));
-
-    const jsonText = cleanJson(response.text || "[]");
-    const data = JSON.parse(jsonText);
+    const data = await postAI('suggestReferences', { prompt });
 
     return data.map((ref: any) => ({
       id: generateId(),
@@ -491,12 +396,8 @@ export const askDocumentContext = async (query: string, documentsContext: string
       Réponds à la question en te basant EXCLUSIVEMENT sur le contexte fourni ci-dessus.
       Si la réponse n'est pas dans le texte, dis-le.
     `;
-
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING, // 1.5 Pro a une grande fenêtre de contexte (1M tokens)
-      contents: prompt
-    }));
-    return response.text || "Je ne trouve pas la réponse dans vos documents.";
+    const res = await postAI('askDocumentContext', { prompt });
+    return res || "Je ne trouve pas la réponse dans vos documents.";
   } catch (e) {
     return "Désolé, je ne peux pas analyser ces documents pour le moment.";
   }
@@ -526,37 +427,9 @@ export const analyzeOrientationProfile = async (profileData: any): Promise<any> 
       ]
     }
   `;
-   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING,
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            archetype: { type: Type.STRING },
-            analysis: { type: Type.STRING },
-            recommendations: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  title: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  schools: { type: Type.STRING },
-                  jobs: { type: Type.STRING }
-                },
-                required: ["title", "description", "schools", "jobs"]
-              }
-            }
-          },
-          required: ["archetype", "analysis", "recommendations"]
-        }
-      }
-    }));
-    const jsonText = cleanJson(response.text || "{}");
-    return JSON.parse(jsonText);
+  try {
+    const data = await postAI('analyzeOrientationProfile', { prompt });
+    return data;
   } catch (e) {
     console.error("Erreur Orientation:", e);
     // Fallback data en cas d'erreur pour éviter le crash
@@ -597,14 +470,7 @@ export const searchJobsWithAI = async (query: string, userLocation: string): Pro
     `;
 
     try {
-        const response = await runWithRetry(() => ai.models.generateContent({
-            model: MODEL_FAST,
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
-        }));
-        
-        const jsonText = cleanJson(response.text || "[]");
-        const results = JSON.parse(jsonText);
+        const results = await postAI('searchJobsWithAI', { prompt });
 
         // Enrichir avec des liens de recherche intelligents (Google Jobs / LinkedIn)
         return results.map((job: any) => ({
@@ -682,14 +548,8 @@ export const analyzeCV = async (cvText: string, targetJob: string): Promise<CVAn
   `;
 
   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
-    }));
-
-    const jsonText = cleanJson(response.text || "{}");
-    return JSON.parse(jsonText);
+    const data = await postAI('analyzeCV', { prompt });
+    return data as CVAnalysisResult;
 
   } catch (error) {
     console.error("CV Analysis Error:", error);
@@ -717,14 +577,7 @@ export const generateCoverLetter = async (cvText: string, jobDescription: string
   `;
 
   try {
-    const response = await runWithRetry(() => ai.models.generateContent({
-      model: MODEL_REASONING,
-      contents: prompt
-    }));
-
-    let text = response.text || "";
-    // Nettoyage ultime au cas où
-    text = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^Objet:.*\n/i, "").trim();
+    const text = await postAI('generateCoverLetter', { prompt });
     return text;
 
   } catch (error) {
