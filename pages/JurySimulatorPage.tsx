@@ -359,15 +359,20 @@ export const JurySimulatorPage: React.FC = () => {
                     <div className="p-2 text-slate-400">
                         <Mic size={20} className="hover:text-emerald-600 cursor-pointer transition-colors" />
                     </div>
-                    <input 
-                    type="text"
-                    className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 px-2 py-2"
-                    placeholder="Défendez votre point de vue..."
+                    <textarea 
+                    className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 px-2 py-2 resize-none min-h-[44px] max-h-[120px]"
+                    placeholder="Défendez votre point de vue... (Shift+Entrée pour saut de ligne)"
                     value={currentInput}
                     onChange={(e) => setCurrentInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                        }
+                    }}
                     disabled={isLoading}
                     autoFocus
+                    rows={1}
                     />
                     <button 
                     onClick={handleSendMessage}
