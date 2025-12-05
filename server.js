@@ -106,13 +106,25 @@ if (envKey) {
 } else {
   // Fallback: try to read .env manually if process.env failed
   try {
-    const envContent = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
-    const match = envContent.match(/GEMINI_API_KEY=(.*)/);
-    if (match && match[1]) {
-      geminiKeys = [match[1].trim()];
+    const envPath = path.join(__dirname, '.env');
+    console.log("Attempting to read .env from:", envPath);
+    if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        console.log(".env content length:", envContent.length);
+        // Robust regex to handle different line endings and optional quotes
+        const match = envContent.match(/GEMINI_API_KEY=["']?([^"'\r\n]+)["']?/);
+        if (match && match[1]) {
+          console.log("Found key in .env manually!");
+          geminiKeys = [match[1].trim()];
+        } else {
+            console.log("Regex failed to match key in .env. Content preview:");
+            console.log(envContent.substring(0, 200) + "...");
+        }
+    } else {
+        console.log(".env file does not exist at path.");
     }
   } catch (e) {
-    // ignore
+    console.error("Error reading .env:", e);
   }
 }
 
@@ -122,6 +134,7 @@ if (geminiKeys.length === 0) {
   // The server will fail to initialize AI, but will start.
 } else {
   console.log(`Loaded ${geminiKeys.length} Gemini API keys.`);
+  console.log(`Active Key: ${geminiKeys[0].substring(0, 10)}...`);
 }
 let currentKeyIndex = 0;
 let genAI = geminiKeys.length > 0 ? new GoogleGenerativeAI(geminiKeys[currentKeyIndex]) : null;
